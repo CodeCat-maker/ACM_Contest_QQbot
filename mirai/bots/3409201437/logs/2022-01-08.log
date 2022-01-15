@@ -1,0 +1,7 @@
+[0m2022-01-08 23:55:17 V/Net 3409201437: No server list cached.[0m
+[92m2022-01-08 23:55:17 I/Net 3409201437: ECDH key is invalid, start to fetch ecdh public key from server.[0m
+[92m2022-01-08 23:55:18 I/Net 3409201437: Successfully fetched ecdh public key from server.[0m
+[0m2022-01-08 23:55:18 V/Net 3409201437: Send: wtlogin.login[0m
+[0m2022-01-08 23:55:18 V/Net 3409201437: Recv: wtlogin.login[0m
+[0m2022-01-08 23:58:25 V/Net 3409201437: Send: wtlogin.login[0m
+[0m2022-01-08 23:58:25 V/Net 3409201437: Recv: wtlogin.login[0m
