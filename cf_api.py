@@ -93,7 +93,6 @@ async def get_usr_rating(name):
         return "程序出错，请稍后再试"
 
 
-# TODO 改成异步，输出改成return
 async def get_contest():
     url = "https://codeforces.com/api/contest.list?gym=false"
     contest_url = "https://codeforces.com/contest/"
@@ -115,25 +114,19 @@ async def get_contest():
 
         if len(contest_list_lately) == 0:
             # print("最近没有比赛~")
-            return "最近没有比赛~"
+            return "最近没有比赛~", 0, 0
         else:
             contest_list_lately.sort(key=lambda x: x['relativeTimeSeconds'], reverse=True)
-            # print("最近比赛有:")
-            res = "最近比赛有:\n"
-            for contest in contest_list_lately:
-                # print("名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n\n".format(
-                #     contest['name'],
-                #     time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(contest['startTimeSeconds']))),
-                #     "{}小时{:02d}分钟".format(contest['durationSeconds'] // 3600, contest['durationSeconds'] % 3600 // 60),
-                #     contest_url+str(contest['id'])
-                # ))
-                res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n\n".format(
-                    contest['name'],
-                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(contest['startTimeSeconds']))),
-                    "{}小时{:02d}分钟".format(contest['durationSeconds'] // 3600, contest['durationSeconds'] % 3600 // 60),
-                    contest_url+str(contest['id'])
-                )
-            return res
+
+            contest = contest_list_lately[0]
+            res = "下一场比赛为：\n"
+            res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
+                contest['name'],
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(contest['startTimeSeconds']))),
+                "{}小时{:02d}分钟".format(contest['durationSeconds'] // 3600, contest['durationSeconds'] % 3600 // 60),
+                contest_url + str(contest['id'])
+            )
+            return res, int(contest['startTimeSeconds']), int(contest['durationSeconds'])
 
 
 

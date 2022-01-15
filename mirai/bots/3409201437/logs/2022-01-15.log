@@ -241,3 +241,34 @@ PermList=[TemplParam#4190210 {
 [0m2022-01-15 21:37:52 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
 [0m2022-01-15 21:38:10 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
 [0m2022-01-15 21:38:10 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:46:28 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:46:28 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:48:40 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:48:40 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:48:47 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:48:47 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:49:53 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:49:53 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:51:04 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:51:04 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:51:14 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:51:14 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:56:21 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:56:22 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:56:22 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:56:22 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:57:23 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:57:23 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:58:46 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:58:46 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:59:02 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:59:02 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:59:55 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:59:56 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[96m2022-01-15 23:00:50 D/Net 3409201437: Transformers528 0x27L: ProfileChanged new data: ModProfile#11593963 {
+            msgProfileInfos=[ProfileInfo#9663313 {
+                    field=0x000069B3(27059)
+                    value=a��Y
+            }]
+            uin=0x00000000414BDD43(1095490883)
+    }[0m

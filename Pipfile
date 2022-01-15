@@ -8,6 +8,7 @@ yiri-mirai = "*"
 requests = "*"
 lxml = "*"
 asyncio = "*"
+apscheduler = "*"
 
 [dev-packages]
 
