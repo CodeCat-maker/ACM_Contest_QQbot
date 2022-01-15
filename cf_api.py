@@ -88,7 +88,7 @@ async def get_usr_rating(name):
             return s
         else:
             pprint.pprint(json_data)
-            return "-1"  # 表示请求失败
+            return -1  # 表示请求失败
     except:
         return "程序出错，请稍后再试"
 
@@ -117,9 +117,9 @@ async def get_contest():
             # print("最近没有比赛~")
             return "最近没有比赛~"
         else:
-            contest_list_lately.sort(key=lambda x: x['relativeTimeSeconds'])
+            contest_list_lately.sort(key=lambda x: x['relativeTimeSeconds'], reverse=True)
             # print("最近比赛有:")
-            res = "最近比赛有:"
+            res = "最近比赛有:\n"
             for contest in contest_list_lately:
                 # print("名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n\n".format(
                 #     contest['name'],
@@ -143,9 +143,9 @@ if __name__ == '__main__':
     name = "ING__"
 
     # asyncio.run(get_usr_rating(name))
-    while True:
-        name = input()
-        print(asyncio.run(get_usr_rating(name)))
+    # while True:
+    #     name = input()
+    #     print(asyncio.run(get_usr_rating(name)))
 
-
+    pprint.pprint(asyncio.run(get_contest()))
     # get_contest()

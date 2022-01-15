@@ -1,6 +1,6 @@
 import re
 import time
-
+import asyncio
 import httpx
 import cf_api
 import atc_api
@@ -9,6 +9,7 @@ from mirai import Mirai, WebSocketAdapter, FriendMessage, GroupMessage, At, Plai
 API_KEY = 'SWeKQBWfoYiQFuZSJ'
 LAST_CF_TIME = 0
 LAST_ATC_TIME = 0
+LAST_CF_CONTEST_INFO = asyncio.run(cf_api.get_contest())
 
 async def query_now_weather(city: str) -> str:
     """查询天气数据。"""
@@ -84,8 +85,6 @@ if __name__ == '__main__':
     async def query_cf_rank(event: GroupMessage):
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        # TODO 有中文不行，
-
         m = re.match(r'^查询CF分数\s*(\w+)\s*$', msg.strip())
         if m is None:
             m = re.match(r'^查询cf分数\s*(\w+)\s*$', msg.strip())
@@ -113,6 +112,7 @@ if __name__ == '__main__':
                 await bot.send(event, "不存在这个用户或查询出错哦")
 
 
+    @bot.on(GroupMessage)
     async def query_cf_contest(event: GroupMessage):
         msg = "".join(map(str, event.message_chain[Plain]))
 
@@ -121,17 +121,20 @@ if __name__ == '__main__':
         if m is None:
             m = re.match(r'查询cf比赛', msg.strip())
 
-        global LAST_CF_TIME
-
-        if int(time.time()) - LAST_CF_TIME < 3600:
-            await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_CF_TIME + 3600 - int(time.time())))
-            return
-
         if m:
+            global LAST_CF_TIME
+            global LAST_CF_CONTEST_INFO
+
             print("查询cf比赛")
+
+            if int(time.time()) - LAST_CF_TIME < 3600:
+                await bot.send(event, LAST_CF_CONTEST_INFO)
+                return
+
             LAST_CF_TIME = int(time.time())
             await bot.send(event, '查询中……')
-            await bot.send(event, await cf_api.get_contest())
+            LAST_CF_CONTEST_INFO = await cf_api.get_contest()
+            await bot.send(event, LAST_CF_CONTEST_INFO)
 
 
     bot.run()
