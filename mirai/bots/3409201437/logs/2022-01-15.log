@@ -191,3 +191,7 @@ PermList=[TemplParam#4190210 {
 [0m2022-01-15 21:00:52 V/Net 3409201437: Recv: friendlist.GetTroopMemberListReq[0m
 [0m2022-01-15 21:07:08 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
 [0m2022-01-15 21:07:08 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:11:45 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:11:45 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m
+[0m2022-01-15 21:11:52 V/Net 3409201437: Send: MessageSvc.PbSendMsg(MessageSvc.PbSendMsg)[0m
+[0m2022-01-15 21:11:52 V/Net 3409201437: Recv: MessageSvc.PbSendMsg[0m

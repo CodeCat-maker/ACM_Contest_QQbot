@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
         if m:
             name = m.group(1)
-            print(name)
+            # print(name)
 
             global LAST_CF_TIME
             if int(time.time()) - LAST_CF_TIME < 15:

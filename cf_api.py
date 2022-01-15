@@ -1,6 +1,6 @@
 import httpx
 import requests
-import retest
+import re
 import json
 import pprint
 import time
@@ -79,7 +79,7 @@ async def get_usr_rating(name):
             if len(json_data) == 0:
                 return "该用户还未进行过比赛"
 
-            pprint.pprint(json_data[-1])
+            # pprint.pprint(json_data[-1])
 
             final_contest = json_data[-1]
             # print(
