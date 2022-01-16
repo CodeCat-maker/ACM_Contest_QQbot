@@ -6,9 +6,13 @@ import datetime
 import cf_api
 from mirai.models import NewFriendRequestEvent
 from mirai import Mirai
+from mirai import Startup, Shutdown
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from mirai_extensions.trigger import HandlerControl, Filter
 from mirai import Mirai, WebSocketAdapter, FriendMessage, GroupMessage, At, Plain, MessageChain, Image
 
+scheduler = AsyncIOScheduler()
 API_KEY = 'SWeKQBWfoYiQFuZSJ'
 LAST_CF_TIME = 0
 LAST_ATC_TIME = 0
@@ -17,11 +21,6 @@ print(LAST_CF_CONTEST_INFO)
 print(LAST_CF_CONTEST_BEGIN_TIME)
 print(LAST_CF_CONTEST_DURING_TIME)
 
-now = datetime.datetime.now()
-begin_time = datetime.datetime.strptime(
-    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME)), "%Y-%m-%d %H:%M:%S")
-end_time = begin_time + datetime.timedelta(seconds=LAST_CF_CONTEST_DURING_TIME)
-print(type(now) == type(end_time) == type(begin_time))
 
 async def query_now_weather(city: str) -> str:
     """查询天气数据。"""
@@ -50,11 +49,22 @@ if __name__ == '__main__':
             verify_key='yirimirai', host='localhost', port=8080
         )
     )
-    hdc = HandlerControl(bot)
+    hdc = HandlerControl(bot)  # 事件接收器
+
+    @bot.on(Startup)
+    def start_scheduler(_):
+        scheduler.start()  # 启动定时器
+
+
+    @bot.on(Shutdown)
+    def stop_scheduler(_):
+        scheduler.shutdown(True)  # 结束定时器
+
 
     @bot.on(NewFriendRequestEvent)
-    async def allow_request(event: NewFriendRequestEvent):
+    async def allow_request(event: NewFriendRequestEvent):  # 有新用户好友申请就自动通过
         await bot.allow(event)
+
 
     @bot.on(FriendMessage)
     def on_friend_message(event: FriendMessage):
@@ -63,7 +73,7 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    def show_list(event: GroupMessage):
+    def show_list(event: GroupMessage):  # 功能列表展示
         msg = "".join(map(str, event.message_chain[Plain]))
         if msg == ".help":
             return bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
@@ -73,7 +83,7 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    def echo(event: GroupMessage):
+    def echo(event: GroupMessage):  # 复读机
         msg = "".join(map(str, event.message_chain[Plain])).strip()
         m = re.match(r'^echo\s*(\w+)\s*$', msg)
         if m and At(bot.qq) in event.message_chain:
@@ -81,13 +91,13 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    def on_group_message(event: GroupMessage):
+    def on_group_message(event: GroupMessage):  # 返回
         if At(bot.qq) in event.message_chain and len("".join(map(str, event.message_chain[Plain]))) == 0:
             return bot.send(event, [At(event.sender.id), '你在叫我吗？'])
 
 
     @bot.on(GroupMessage)
-    async def weather_query(event: GroupMessage):
+    async def weather_query(event: GroupMessage):  # 天气查询
         # 从消息链中取出文本
         msg = "".join(map(str, event.message_chain[Plain]))
         # 匹配指令
@@ -103,8 +113,9 @@ if __name__ == '__main__':
 
 
     # CF
+
     @bot.on(GroupMessage)
-    async def query_cf_rank(event: GroupMessage):
+    async def query_cf_rank(event: GroupMessage):  # 查询对应人的分数
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'^查询CF分数\s*(\w+)\s*$', msg.strip())
@@ -124,7 +135,6 @@ if __name__ == '__main__':
                 await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_CF_TIME + 15 - int(time.time())))
                 return
 
-
             LAST_CF_TIME = int(time.time())
             await bot.send(event, '查询中……')
             statue = await cf_api.get_usr_rating(name)
@@ -135,7 +145,7 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    async def query_cf_contest(event: GroupMessage):
+    async def query_cf_contest(event: GroupMessage):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'查询CF比赛', msg.strip())
@@ -159,73 +169,41 @@ if __name__ == '__main__':
             await bot.send(event, LAST_CF_CONTEST_INFO)
 
 
-    @bot.add_background_task()
+    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 10 * 60 * 1000).tm_min))
     async def shang_hao():
-        today_finished = False  # 设置变量标识今天是会否完成任务，防止重复发送
-        while True:
-            await asyncio.sleep(1)
-            now = datetime.datetime.now()
-            begin_time = datetime.datetime.strptime(
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME)), "%Y-%m-%d %H:%M:%S")
-
-            if now.hour == begin_time.hour and now.minute == (begin_time - datetime.timedelta(minutes=5)).minute and today_finished is False:
-            # if now.hour == 1 and 29 and today_finished is False:
-                today_finished = True
-                message_chain = MessageChain([
-                    await Image.from_local('./pic/up.jpg')
-                ])
-                await bot.send_group_message(874149706, message_chain)  # 874149706测试号
-
-            if now.hour == begin_time.hour and now.minute == (begin_time - datetime.timedelta(minutes=6)).minute:
-            # if now.hour == 1 and now.minute == 30:
-                today_finished = True
+        message_chain = MessageChain([
+            await Image.from_local('./pic/up.jpg')
+        ])
+        await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
-    @bot.add_background_task()
+    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 1000 * LAST_CF_CONTEST_DURING_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 1000 * LAST_CF_CONTEST_DURING_TIME).tm_min))
     async def xia_hao():
-        today_finished = False  # 设置变量标识今天是会否完成任务，防止重复发送
-        while True:
-            await asyncio.sleep(1)
-            now = datetime.datetime.now()
-            begin_time = datetime.datetime.strptime(
-                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME)), "%Y-%m-%d %H:%M:%S")
-            end_time = begin_time + datetime.timedelta(seconds=LAST_CF_CONTEST_DURING_TIME)
-
-            print(str(end_time) + " " + str(now) + " " + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME)))
-
-            if now.hour == end_time.hour and now.minute == end_time.minute and today_finished is False:
-                message_chain = MessageChain([
-                    await Image.from_local('./pic/down.jpg')
-                ])
-                await bot.send_group_message(874149706, message_chain)  # 874149706 测试号
-
-            if now.hour == end_time.hour and now.minute == (end_time + datetime.timedelta(minutes=1)).minute:
-                today_finished = True
+        message_chain = MessageChain([
+            await Image.from_local('./pic/down.jpg.jpg')
+        ])
+        await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
-    @bot.add_background_task()
-    async def auto_update_contest():
-        today_finished = False  # 设置变量标识今天是会否完成任务，防止重复发送
+    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
+    async def update_cf_contest_info():
         global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
+        LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = asyncio.run(cf_api.get_contest())
 
-        while True:
-            await asyncio.sleep(1)
-            now = datetime.datetime.now()
-
-            if now.hour == 8 and now.minute == 30 and not today_finished:  # 每天早上 7:30 发送早安
-                LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = asyncio.run(cf_api.get_contest())
-                today_finished = True
-            if now.hour == 8 and now.minute == 31:
-                today_finished = False  # 早上 7:31，重置今天是否完成任务的标识
+        # 发送当日信息
+        await bot.send_friend_message(1095490883, LAST_CF_CONTEST_INFO)  # lzd
+        await bot.send_friend_message(942845546, LAST_CF_CONTEST_INFO)  # wlx
+        await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
 
     # debug
     @Filter(FriendMessage)
-    async def filter_(event: FriendMessage):  # 定义过滤器，在过滤器中对事件进行过滤和解析
+    def filter_(event: FriendMessage):  # 定义过滤器，在过滤器中对事件进行过滤和解析
         msg = str(event.message_chain)
         # 如果好友发送的消息格式正确，过滤器返回消息的剩余部分。比如，好友发送“ / command”，过滤器返回'command'。
         # 如果好友发送的消息格式不正确，过滤器隐式地返回None。
         if msg.startswith('/'):
             return msg[1:]
+
 
     @hdc.on(filter_)
     async def handler(event: FriendMessage, payload: str):
@@ -233,7 +211,9 @@ if __name__ == '__main__':
         LAST_CF_CONTEST_BEGIN_TIME = int(time.time())
         LAST_CF_CONTEST_DURING_TIME = 60
         print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME)))
-        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME)))
+        print(time.strftime("%Y-%m-%d %H:%M:%S",
+                            time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME)))
         await bot.send(event, f'命令 {payload} 执行成功。')
+
 
     bot.run()
