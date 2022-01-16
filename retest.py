@@ -1,7 +1,7 @@
 import re
+import time
 
-s = "查询CF比赛"
+begin_tim = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(1642343700))
 
-m = re.match(r'查询CF比赛', s.strip())
-
-print(m)
+print(begin_tim)
+print(type(begin_tim))
