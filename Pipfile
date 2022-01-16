@@ -10,6 +10,7 @@ lxml = "*"
 asyncio = "*"
 apscheduler = "*"
 yiri-mirai-trigger = "*"
+httpx = "*"
 
 [dev-packages]
 
