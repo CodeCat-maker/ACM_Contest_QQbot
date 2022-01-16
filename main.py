@@ -67,9 +67,9 @@ if __name__ == '__main__':
 
 
     @bot.on(FriendMessage)
-    def on_friend_message(event: FriendMessage):
+    async def on_friend_message(event: FriendMessage):
         if str(event.message_chain) == '你好':
-            return bot.send(event, 'Hello, World!')
+            await bot.send(event, 'Hello, World!')
 
 
     @bot.on(GroupMessage)
@@ -83,17 +83,17 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    def echo(event: GroupMessage):  # 复读机
+    async def echo(event: GroupMessage):  # 复读机
         msg = "".join(map(str, event.message_chain[Plain])).strip()
         m = re.match(r'^echo\s*(\w+)\s*$', msg)
         if m and At(bot.qq) in event.message_chain:
-            return bot.send(event, msg)
+            await bot.send(event, msg)
 
 
     @bot.on(GroupMessage)
-    def on_group_message(event: GroupMessage):  # 返回
+    async def on_group_message(event: GroupMessage):  # 返回
         if At(bot.qq) in event.message_chain and len("".join(map(str, event.message_chain[Plain]))) == 0:
-            return bot.send(event, [At(event.sender.id), '你在叫我吗？'])
+            await bot.send(event, [At(event.sender.id), '你在叫我吗？'])
 
 
     @bot.on(GroupMessage)
@@ -131,8 +131,8 @@ if __name__ == '__main__':
             # print(name)
 
             global LAST_CF_TIME
-            if int(time.time()) - LAST_CF_TIME < 15:
-                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_CF_TIME + 15 - int(time.time())))
+            if int(time.time()) - LAST_CF_TIME < 5:  # 每次询问要大于5秒
+                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_CF_TIME + 5 - int(time.time())))
                 return
 
             LAST_CF_TIME = int(time.time())
@@ -165,11 +165,12 @@ if __name__ == '__main__':
 
             LAST_CF_TIME = int(time.time())
             await bot.send(event, '查询中……')
+            await asyncio.sleep(1)
             # LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
             await bot.send(event, LAST_CF_CONTEST_INFO)
 
 
-    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 10 * 60 * 1000).tm_min))
+    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 10 * 60).tm_min))
     async def shang_hao():
         message_chain = MessageChain([
             await Image.from_local('./pic/up.jpg')
@@ -177,7 +178,7 @@ if __name__ == '__main__':
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
-    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 1000 * LAST_CF_CONTEST_DURING_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + 1000 * LAST_CF_CONTEST_DURING_TIME).tm_min))
+    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_min))
     async def xia_hao():
         message_chain = MessageChain([
             await Image.from_local('./pic/down.jpg.jpg')
@@ -194,6 +195,7 @@ if __name__ == '__main__':
         await bot.send_friend_message(1095490883, LAST_CF_CONTEST_INFO)  # lzd
         await bot.send_friend_message(942845546, LAST_CF_CONTEST_INFO)  # wlx
         await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
+        await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # zsh
 
     # debug
     @Filter(FriendMessage)
