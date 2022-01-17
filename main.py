@@ -195,7 +195,9 @@ if __name__ == '__main__':
         await bot.send_friend_message(1095490883, LAST_CF_CONTEST_INFO)  # lzd
         await bot.send_friend_message(942845546, LAST_CF_CONTEST_INFO)  # wlx
         await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
+
         await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # zsh
+        await bot.send_group_message(687601411, LAST_CF_CONTEST_INFO)  # zsh
 
     # debug
     @Filter(FriendMessage)
