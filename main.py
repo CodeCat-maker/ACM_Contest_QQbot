@@ -170,7 +170,10 @@ if __name__ == '__main__':
             await bot.send(event, LAST_CF_CONTEST_INFO)
 
 
-    @scheduler.scheduled_job(CronTrigger(day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday, hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon,
+                                         day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday,
+                                         hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour,
+                                         minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
     async def shang_hao():
         message_chain = MessageChain([
             await Image.from_local('./pic/up.jpg')
@@ -178,7 +181,10 @@ if __name__ == '__main__':
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
-    @scheduler.scheduled_job(CronTrigger(hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_hour, minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_min))
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mon,
+                                         day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mday,
+                                         hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_hour,
+                                         minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_min))
     async def xia_hao():
         message_chain = MessageChain([
             await Image.from_local('./pic/down.jpg')
