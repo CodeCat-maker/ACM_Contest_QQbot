@@ -4,6 +4,7 @@ import asyncio
 import httpx
 import datetime
 import cf_api
+import atc_api
 from mirai.models import NewFriendRequestEvent
 from mirai import Mirai
 from mirai import Startup, Shutdown
@@ -14,9 +15,13 @@ from mirai import Mirai, WebSocketAdapter, FriendMessage, GroupMessage, At, Plai
 
 scheduler = AsyncIOScheduler()
 API_KEY = 'SWeKQBWfoYiQFuZSJ'
+
 LAST_CF_TIME = 0
-LAST_ATC_TIME = 0
 LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = asyncio.run(cf_api.get_contest())
+
+LAST_ATC_TIME = 0
+LAST_ATC_CONTEST_INFO = asyncio.run(atc_api.get_contest_lately())
+
 print(LAST_CF_CONTEST_INFO)
 print(LAST_CF_CONTEST_BEGIN_TIME)
 print(LAST_CF_CONTEST_DURING_TIME)
@@ -73,12 +78,14 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    def show_list(event: GroupMessage):  # 功能列表展示
+    async def show_list(event: GroupMessage):  # 功能列表展示
         msg = "".join(map(str, event.message_chain[Plain]))
         if msg == ".help":
-            return bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
-                                                         "\n“查询CF分数 {id}” 查询对应用户的cf分数"
-                                                         "\n“查询cf比赛” 通知最新的CF比赛"
+            await bot.send(event, [At(event.sender.id),  "\n“查询天气 {城市}” 查询城市实时天气"
+                                                         "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
+                                                         "\n“查询cf比赛” 通知最新的Codeforces比赛"
+                                                         "\n“查询ATC比赛” 通知最新的AtCoder比赛"
+                                                         "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
                                                          "\n“@上分上分上分 echo {xxx}” 重复xxx"])
 
 
@@ -192,18 +199,80 @@ if __name__ == '__main__':
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
-    @scheduler.scheduled_job(CronTrigger(day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday, hour=10, minute=30))
-    async def update_cf_contest_info():
+    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
+    async def update_contest_info():
         global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
         LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = asyncio.run(cf_api.get_contest())
 
+        global LAST_ATC_CONTEST_INFO
+        LAST_ATC_CONTEST_INFO = asyncio.run(atc_api.get_contest_lately())
+
+
+
+    @scheduler.scheduled_job(CronTrigger(day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday, hour=10, minute=30))
+    async def notify_contest_info():
         # 发送当日信息
         await bot.send_friend_message(1095490883, LAST_CF_CONTEST_INFO)  # lzd
         await bot.send_friend_message(942845546, LAST_CF_CONTEST_INFO)  # wlx
         await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
 
-        await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # zsh
-        await bot.send_group_message(687601411, LAST_CF_CONTEST_INFO)  # zsh
+        await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # 纳新群
+        await bot.send_group_message(687601411, LAST_CF_CONTEST_INFO)  # 训练群
+
+    # ATC
+    @bot.on(GroupMessage)
+    async def query_atc_contest(event: GroupMessage):  # 查询最近比赛
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        m = re.match(r'查询ATC比赛', msg.strip())
+
+        if m is None:
+            m = re.match(r'查询ATC比赛', msg.strip())
+
+        if m:
+            global LAST_ATC_CONTEST_INFO, LAST_ATC_TIME
+
+            print("查询atc比赛")
+
+            if int(time.time()) - LAST_ATC_TIME < 3600:
+                await bot.send(event, LAST_ATC_CONTEST_INFO)
+                return
+
+            LAST_ATC_TIME = int(time.time())
+            await bot.send(event, '查询中……')
+            await asyncio.sleep(1)
+
+            await bot.send(event, await atc_api.get_contest_lately())
+
+
+    @bot.on(GroupMessage)
+    async def query_cf_rank(event: GroupMessage):  # 查询对应人的分数
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        m = re.match(r'^查询ATC分数\s*(\w+)\s*$', msg.strip())
+        if m is None:
+            m = re.match(r'^查询atc分数\s*(\w+)\s*$', msg.strip())
+        if m is None:
+            m = re.match(r'^查询(.*)的CF分数$', msg.strip())
+        if m is None:
+            m = re.match(r'^查询(.*)的cf分数$', msg.strip())
+
+        if m:
+            name = m.group(1)
+            # print(name)
+
+            global LAST_ATC_TIME
+            if int(time.time()) - LAST_ATC_TIME < 5:  # 每次询问要大于5秒
+                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_ATC_TIME + 5 - int(time.time())))
+                return
+
+            LAST_ATC_TIME = int(time.time())
+            await bot.send(event, '查询中……')
+            statue = await cf_api.get_usr_rating(name)
+            if statue != -1:
+                await bot.send(event, statue)
+            else:
+                await bot.send(event, "不存在这个用户或查询出错哦")
 
     # debug
     @Filter(FriendMessage)

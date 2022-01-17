@@ -20,7 +20,7 @@ async def get_html(url):
         r = await client.get(url=url, headers=headers)
 
     # r.encoding = r.apparent_encoding
-    time.sleep(5)
+    await asyncio.sleep(5)
     return r.text
 
 
@@ -41,7 +41,7 @@ async def get_json(url):
         # print(url_text)
         # json_data = json.loads(url_text)
         json_data = response.json()
-        # time.sleep(3)
+        await asyncio.sleep(5)
         return json_data
     except:
         return -1
@@ -54,7 +54,8 @@ async def text_save(filename, text):  # filename为写入CSV文件的路径，da
     print("保存文件成功")
 
 
-async def get_usr_rank(name):
+
+async def get_usr_rank(name):  # 返回一个列表，如果不存在用户则是空列表
     url = "https://atcoder.jp/users/" + name
 
     # 获取网页到本地
@@ -75,9 +76,13 @@ async def get_usr_rank(name):
     # -----xpath办法失败，不知道为什么获取的值都是空的，有没有懂的大佬可以解答一下qwq-------
 
     r = r'<th class="no-break">Rating<\/th><td><span class=\'user-gray\'>(.*?)<\/span>'
-    results = retest.findall(r, html, retest.S)
+    results = re.findall(r, html, re.S)
 
-    print(results)
+    # print(results)
+    try:
+        return results[0]
+    except:
+        return -1
 
     # os.remove("./atc_usr.html")
 
@@ -86,8 +91,8 @@ async def get_contest_lately():
     url = "https://atcoder.jp/contests/"
 
     # 获取网页到本地
-    html = get_html(url)
-    await text_save('./atc_contest.html', html)
+    html = await get_html(url)
+    await(text_save('./atc_contest.html', html))
 
     # 转化为能处理的对象
     h5 = etree.parse("./atc_contest.html", etree.HTMLParser())
@@ -109,12 +114,22 @@ async def get_contest_lately():
     pprint.pprint(contest_time)
     pprint.pprint(contest_name)
     pprint.pprint(during_time)
-    pprint.pprint(url + str(contest_url[0]))
+    pprint.pprint(url + str(contest_url[1:]))
 
     os.remove("./atc_contest.html")
 
+    res = "下一场比赛为：\n"
+    res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
+        contest_name,
+        contest_time,
+        "{}小时{:02d}分钟".format(int(during_time[0:2]), int(during_time[3:])),
+        url + str(contest_url[1:])
+    )
+
+    # print(res)
+    return res
 
 if __name__ == '__main__':
-    # get_contest_lately()
-    get_usr_rank("ING__")
+    # asyncio.run(get_contest_lately())
+    print(asyncio.run(get_usr_rank("432423")))
     pass
