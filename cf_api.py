@@ -119,7 +119,7 @@ async def get_contest():
             contest_list_lately.sort(key=lambda x: x['relativeTimeSeconds'], reverse=True)
 
             contest = contest_list_lately[0]
-            res = "下一场比赛为：\n"
+            res = "下一场Codeforces比赛为：\n"
             res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
                 contest['name'],
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(contest['startTimeSeconds']))),

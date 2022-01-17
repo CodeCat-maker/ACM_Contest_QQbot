@@ -118,7 +118,7 @@ async def get_contest_lately():
 
     os.remove("./atc_contest.html")
 
-    res = "下一场比赛为：\n"
+    res = "下一场AtCoder比赛为：\n"
     res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
         contest_name,
         contest_time,
