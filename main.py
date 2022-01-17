@@ -246,7 +246,7 @@ if __name__ == '__main__':
 
 
     @bot.on(GroupMessage)
-    async def query_cf_rank(event: GroupMessage):  # 查询对应人的分数
+    async def query_atc_rank(event: GroupMessage):  # 查询对应人的分数
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'^查询ATC分数\s*(\w+)\s*$', msg.strip())
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
             LAST_ATC_TIME = int(time.time())
             await bot.send(event, '查询中……')
-            statue = await cf_api.get_usr_rating(name)
+            statue = await atc_api.get_usr_rank(name)
             if statue != -1:
                 await bot.send(event, statue)
             else:
