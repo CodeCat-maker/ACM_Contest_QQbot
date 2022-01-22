@@ -214,7 +214,7 @@ if __name__ == '__main__':
         # 发送当日信息
         await bot.send_friend_message(1095490883, LAST_CF_CONTEST_INFO)  # lzd
         await bot.send_friend_message(942845546, LAST_CF_CONTEST_INFO)  # wlx
-        await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
+        # await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
 
         await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # 纳新群
         await bot.send_group_message(687601411, LAST_CF_CONTEST_INFO)  # 训练群
@@ -253,9 +253,9 @@ if __name__ == '__main__':
         if m is None:
             m = re.match(r'^查询atc分数\s*(\w+)\s*$', msg.strip())
         if m is None:
-            m = re.match(r'^查询(.*)的CF分数$', msg.strip())
+            m = re.match(r'^查询(.*)的atc分数$', msg.strip())
         if m is None:
-            m = re.match(r'^查询(.*)的cf分数$', msg.strip())
+            m = re.match(r'^查询(.*)的ATC分数$', msg.strip())
 
         if m:
             name = m.group(1)
