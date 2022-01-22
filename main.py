@@ -198,6 +198,10 @@ if __name__ == '__main__':
         ])
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
+        global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME  # 比完接着更新
+        LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = asyncio.run(
+            cf_api.get_contest())
+
 
     @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
     async def update_contest_info():
