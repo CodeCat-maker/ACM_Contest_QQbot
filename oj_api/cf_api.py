@@ -5,44 +5,7 @@ import json
 import pprint
 import time
 import asyncio
-
-
-async def get_html(url):
-    headers = {
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36",
-        'Connection': 'close'
-    }
-
-    # r = requests.get(url=url, headers=headers)
-    async with httpx.AsyncClient() as client:
-        r = await client.get(url=url, headers=headers)
-
-    # r.encoding = r.apparent_encoding
-    await asyncio.sleep(5)
-    return r.text
-
-
-async def get_json(url):
-    headers = {
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36",
-        'Connection': 'close'
-    }
-
-    # response = requests.get(url=url, headers=headers)
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url=url, headers=headers)
-
-    # print(response.status_code)
-
-    try:
-        # url_text = response.content.decode()
-        # print(url_text)
-        # json_data = json.loads(url_text)
-        json_data = response.json()
-        await asyncio.sleep(5)
-        return json_data
-    except:
-        return -1
+from web_operation.operation import *
 
 
 async def get_usr_rating(name):
@@ -120,7 +83,7 @@ async def get_contest():
 
             contest = contest_list_lately[0]
             res = "下一场Codeforces比赛为：\n"
-            res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
+            res += "比赛名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}".format(
                 contest['name'],
                 time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(contest['startTimeSeconds']))),
                 "{}小时{:02d}分钟".format(contest['durationSeconds'] // 3600, contest['durationSeconds'] % 3600 // 60),

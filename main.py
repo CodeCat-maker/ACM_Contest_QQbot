@@ -2,11 +2,9 @@ import re
 import time
 import asyncio
 import httpx
-import datetime
-import cf_api
-import atc_api
+from oj_api import atc_api, cf_api, nc_api
 from mirai.models import NewFriendRequestEvent
-from mirai import Mirai
+
 from mirai import Startup, Shutdown
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -21,6 +19,9 @@ LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = 
 
 LAST_ATC_TIME = 0
 LAST_ATC_CONTEST_INFO = asyncio.run(atc_api.get_contest_lately())
+
+LAST_NC_TIME = 0
+LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = asyncio.run(nc_api.get_contest())
 
 print(LAST_CF_CONTEST_INFO)
 print(LAST_CF_CONTEST_BEGIN_TIME)
@@ -56,6 +57,7 @@ if __name__ == '__main__':
     )
     hdc = HandlerControl(bot)  # 事件接收器
 
+
     @bot.on(Startup)
     def start_scheduler(_):
         scheduler.start()  # 启动定时器
@@ -81,12 +83,13 @@ if __name__ == '__main__':
     async def show_list(event: GroupMessage):  # 功能列表展示
         msg = "".join(map(str, event.message_chain[Plain]))
         if msg == ".help":
-            await bot.send(event, [At(event.sender.id),  "\n“查询天气 {城市}” 查询城市实时天气"
-                                                         "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
-                                                         "\n“查询cf比赛” 通知最新的Codeforces比赛"
-                                                         "\n“查询ATC比赛” 通知最新的AtCoder比赛"
-                                                         "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
-                                                         "\n“@上分上分上分 echo {xxx}” 重复xxx"])
+            await bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
+                                                        "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
+                                                        "\n“查询cf比赛” 通知最新的Codeforces比赛"
+                                                        "\n“查询ATC比赛” 通知最新的AtCoder比赛"
+                                                        "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
+                                                        "\n“查询牛客比赛” 通知最新的牛客比赛"
+                                                        "\n“@上分上分上分 echo {xxx}” 重复xxx"])
 
 
     @bot.on(GroupMessage)
@@ -181,35 +184,26 @@ if __name__ == '__main__':
                                          day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday,
                                          hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour,
                                          minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
-    async def shang_hao():
+    async def cf_shang_hao():
         message_chain = MessageChain([
-            await Image.from_local('./pic/up.jpg')
+            await Image.from_local('pic/up_cf.jpg')
         ])
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
-    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mon,
-                                         day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mday,
-                                         hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_hour,
-                                         minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_min))
-    async def xia_hao():
+    @scheduler.scheduled_job(
+        CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mon,
+                    day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mday,
+                    hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_hour,
+                    minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_min))
+    async def cf_xia_hao():
         message_chain = MessageChain([
-            await Image.from_local('./pic/down.jpg')
+            await Image.from_local('pic/down_cf.jpg')
         ])
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
         global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME  # 比完接着更新
         LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
-
-
-    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
-    async def update_contest_info():
-        global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
-        LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
-
-        global LAST_ATC_CONTEST_INFO
-        LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
-
 
 
     @scheduler.scheduled_job(CronTrigger(day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday, hour=10, minute=30))
@@ -221,6 +215,7 @@ if __name__ == '__main__':
 
         await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # 纳新群
         await bot.send_group_message(687601411, LAST_CF_CONTEST_INFO)  # 训练群
+
 
     # ATC
     @bot.on(GroupMessage)
@@ -276,6 +271,55 @@ if __name__ == '__main__':
                 await bot.send(event, statue)
             else:
                 await bot.send(event, "不存在这个用户或查询出错哦")
+
+
+    # nowcoder
+    @bot.on(GroupMessage)
+    async def query_nc_contest(event: GroupMessage):  # 查询最近比赛
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        m = re.match(r'查询牛客比赛', msg.strip())
+
+        if m:
+            global LAST_NC_TIME
+            global LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME
+
+            print("查询牛客比赛")
+
+            # if int(time.time()) - LAST_CF_TIME < 3600:
+            #     await bot.send(event, LAST_CF_CONTEST_INFO)
+            #     return
+
+            LAST_NC_TIME = int(time.time())
+            await bot.send(event, '查询中……')
+            await asyncio.sleep(1)
+            # LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
+            await bot.send(event, LAST_NC_CONTEST_INFO)
+
+
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon,
+                                         day=time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mday,
+                                         hour=time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_hour,
+                                         minute=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
+    async def nc_shang_hao():
+        message_chain = MessageChain([
+            await Image.from_local('pic/up_nc.jpg')
+        ])
+        await bot.send_group_message(763537993, message_chain)  # 874149706测试号
+
+
+    # daily
+    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
+    async def update_contest_info():
+        global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
+        LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
+
+        global LAST_ATC_CONTEST_INFO
+        LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
+
+        global LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME
+        LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
+
 
     # debug
     @Filter(FriendMessage)
