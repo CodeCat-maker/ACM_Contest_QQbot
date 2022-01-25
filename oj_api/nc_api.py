@@ -3,7 +3,6 @@ from web_operation.operation import *
 import time
 import datetime
 import asyncio
-import httpx
 import pprint
 
 
