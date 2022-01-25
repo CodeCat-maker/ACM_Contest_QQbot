@@ -66,10 +66,10 @@ async def get_contest_lately():
     contest_url = h5.xpath(contest_url_xpath)[0]
 
     # debug
-    pprint.pprint(contest_time)
-    pprint.pprint(contest_name)
-    pprint.pprint(during_time)
-    pprint.pprint(url + str(contest_url[1:]))
+    # pprint.pprint(contest_time)
+    # pprint.pprint(contest_name)
+    # pprint.pprint(during_time)
+    # pprint.pprint(url + str(contest_url[1:]))
 
     os.remove("./atc_contest.html")
 

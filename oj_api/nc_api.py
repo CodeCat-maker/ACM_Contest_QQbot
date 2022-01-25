@@ -40,7 +40,7 @@ async def get_contest():
         lately_contest['link']
     )
 
-    return res, int(lately_contest['startTime'])
+    return res, int(lately_contest['startTime'] // 1000)
 
 
 if __name__ == '__main__':
