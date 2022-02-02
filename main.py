@@ -1,16 +1,19 @@
 import re
+import sys
 import time
 import asyncio
 import httpx
+from log import Log
 from oj_api import atc_api, cf_api, nc_api
 from mirai.models import NewFriendRequestEvent
-
 from mirai import Startup, Shutdown
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from mirai_extensions.trigger import HandlerControl, Filter
 from mirai import Mirai, WebSocketAdapter, FriendMessage, GroupMessage, At, Plain, MessageChain, Image
 
+sys.stdout = Log.Logger()  # 定义log类
+sys.stderr = Log.Logger()
 scheduler = AsyncIOScheduler()
 API_KEY = 'SWeKQBWfoYiQFuZSJ'
 
@@ -311,6 +314,10 @@ if __name__ == '__main__':
     # daily
     @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
     async def update_contest_info():
+        now = time.localtime()
+        print()
+        print(time.strftime("%Y-%m-%d", now))  # 给log换行
+
         global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
         LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
 

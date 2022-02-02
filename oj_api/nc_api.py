@@ -19,27 +19,38 @@ async def get_contest():
 
     lately_contest = dict()
 
-    for contest in contest_data:
-        if contest['ojName'] == 'NowCoder' \
-                and contest['startTime'] >= int(time.time()) * 1000 \
-                and ("专题" not in contest['contestName']):
-            lately_contest = contest
-            break  # 只获取马上要举行的牛客比赛
+    try_time = 0
 
-    durationSeconds = (int(lately_contest['endTime']) - int(lately_contest['startTime'])) // 1000
+    while try_time < 5:  # 重试五次，每次间隔20分钟
+        for contest in contest_data:
+            if contest['ojName'] == 'NowCoder' \
+                    and contest['startTime'] >= int(time.time()) * 1000 \
+                    and ("专题" not in contest['contestName']):
+                lately_contest = contest
+                break  # 只获取马上要举行的牛客比赛
 
-    res = "下一场牛客比赛为：\n" \
-          "比赛名称：{}\n" \
-          "开始时间：{}\n" \
-          "持续时间：{}\n" \
-          "比赛地址：{}".format(
-        lately_contest['contestName'],
-        time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(lately_contest['startTime']) // 1000)),
-        "{}小时{:02d}分钟".format(durationSeconds // 3600, durationSeconds % 3600 // 60),
-        lately_contest['link']
-    )
+        if lately_contest.__contains__('endTime') and lately_contest.__contains__('startTime'):
+            durationSeconds = (int(lately_contest['endTime']) - int(lately_contest['startTime'])) // 100
+        else:
+            try_time += 1
 
-    return res, int(lately_contest['startTime'] // 1000)
+            print("获取牛客失败，正在重试")
+            # pprint.pprint(lately_contest)
+            continue
+
+        res = "下一场牛客比赛为：\n" \
+              "比赛名称：{}\n" \
+              "开始时间：{}\n" \
+              "持续时间：{}\n" \
+              "比赛地址：{}".format(
+            lately_contest['contestName'],
+            time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(lately_contest['startTime']) // 1000)),
+            "{}小时{:02d}分钟".format(durationSeconds // 3600, durationSeconds % 3600 // 60),
+            lately_contest['link']
+        )
+
+        return res, int(lately_contest['startTime'] // 1000)
+
 
 
 if __name__ == '__main__':
