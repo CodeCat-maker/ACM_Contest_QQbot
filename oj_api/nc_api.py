@@ -35,6 +35,7 @@ async def get_contest():
             try_time += 1
 
             print("获取牛客失败，正在重试")
+            await asyncio.sleep(20 * 60)  # 休息20分钟再试
             # pprint.pprint(lately_contest)
             continue
 

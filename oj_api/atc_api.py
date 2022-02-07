@@ -1,3 +1,4 @@
+import datetime
 import requests
 import re
 import json
@@ -62,8 +63,11 @@ async def get_contest_lately():
     # 获取对应的信息
     contest_time = h5.xpath(time_xpath)[0]
     contest_name = h5.xpath(contest_xpath)[0]
-    during_time = h5.xpath(during_time_xpath)[0]
+    during_time = h5.xpath(during_time_xpath)[0].split(':')
     contest_url = h5.xpath(contest_url_xpath)[0]
+
+    during_time_hour = during_time[0]
+    during_time_min = during_time[1]
 
     # debug
     # pprint.pprint(contest_time)
@@ -77,14 +81,15 @@ async def get_contest_lately():
     res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
         contest_name,
         contest_time,
-        "{}小时{:02d}分钟".format(int(during_time[0:2]), int(during_time[3:])),
+        "{}小时{:02d}分钟".format(int(during_time_hour), int(during_time_min)),
         url + str(contest_url[1:])
     )
 
     # print(res)
-    return res
+    return [res, datetime.datetime.strptime(contest_time[0:10], '%Y-%m-%d')]
 
 if __name__ == '__main__':
     # asyncio.run(get_contest_lately())
-    print(asyncio.run(get_usr_rank("432423")))
+    print(type(asyncio.run(get_contest_lately())[1].month))
+    # print(asyncio.run(get_usr_rank("432423")))
     pass

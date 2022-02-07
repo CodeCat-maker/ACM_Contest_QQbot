@@ -10,7 +10,7 @@ class Logger(object):
 
     def write(self, message):
         if str(message).isspace() is False:
-            self.terminal.write(message)
+            self.terminal.write(str(message) + '\n')
             self.log.write(str(time.strftime('%Y-%m-%d %H:%M:%S\n', time.localtime())) + str(message) + '\n\n')
             self.log.flush()  # 缓冲区的内容及时更新到log文件中
 

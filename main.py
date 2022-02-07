@@ -3,8 +3,9 @@ import sys
 import time
 import asyncio
 import httpx
+import datetime
 from log import Log
-from oj_api import atc_api, cf_api, nc_api
+from oj_api import atc_api, cf_api, nc_api, lc_api
 from mirai.models import NewFriendRequestEvent
 from mirai import Startup, Shutdown
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -25,6 +26,9 @@ LAST_ATC_CONTEST_INFO = asyncio.run(atc_api.get_contest_lately())
 
 LAST_NC_TIME = 0
 LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = asyncio.run(nc_api.get_contest())
+
+LAST_LC_TIME = 0
+LAST_LC_CONTEST_INFO = asyncio.run(lc_api.get_contest())
 
 print(LAST_CF_CONTEST_INFO)
 print(LAST_CF_CONTEST_BEGIN_TIME)
@@ -88,10 +92,12 @@ if __name__ == '__main__':
         if msg == ".help":
             await bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
                                                         "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
-                                                        "\n“查询cf比赛” 通知最新的Codeforces比赛"
-                                                        "\n“查询ATC比赛” 通知最新的AtCoder比赛"
+                                                        "\n“cf” 通知最新的Codeforces比赛"
+                                                        "\n“atc” 通知最新的AtCoder比赛"
                                                         "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
-                                                        "\n“查询牛客比赛” 通知最新的牛客比赛"
+                                                        "\n“牛客” 通知最新的牛客比赛"
+                                                        "\n“lc” 通知最新的力扣比赛"
+                                                        "\n “today” 查询今天比赛"
                                                         "\n“@上分上分上分 echo {xxx}” 重复xxx"])
 
 
@@ -161,10 +167,10 @@ if __name__ == '__main__':
     async def query_cf_contest(event: GroupMessage):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'查询CF比赛', msg.strip())
+        m = re.match(r'cf', msg.strip())
 
         if m is None:
-            m = re.match(r'查询cf比赛', msg.strip())
+            m = re.match(r'CF', msg.strip())
 
         if m:
             global LAST_CF_TIME
@@ -225,10 +231,10 @@ if __name__ == '__main__':
     async def query_atc_contest(event: GroupMessage):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'查询ATC比赛', msg.strip())
+        m = re.match(r'atc', msg.strip())
 
         if m is None:
-            m = re.match(r'查询ATC比赛', msg.strip())
+            m = re.match(r'ATC', msg.strip())
 
         if m:
             global LAST_ATC_CONTEST_INFO, LAST_ATC_TIME
@@ -236,14 +242,15 @@ if __name__ == '__main__':
             print("查询atc比赛")
 
             if int(time.time()) - LAST_ATC_TIME < 3600:
-                await bot.send(event, LAST_ATC_CONTEST_INFO)
+                await bot.send(event, LAST_ATC_CONTEST_INFO[0])
                 return
 
             LAST_ATC_TIME = int(time.time())
             await bot.send(event, '查询中……')
             await asyncio.sleep(1)
 
-            await bot.send(event, await atc_api.get_contest_lately())
+            LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
+            await bot.send(event, LAST_ATC_CONTEST_INFO[0])
 
 
     @bot.on(GroupMessage)
@@ -281,7 +288,7 @@ if __name__ == '__main__':
     async def query_nc_contest(event: GroupMessage):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'查询牛客比赛', msg.strip())
+        m = re.match(r'牛客', msg.strip())
 
         if m:
             global LAST_NC_TIME
@@ -311,8 +318,73 @@ if __name__ == '__main__':
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
 
+    # 力扣
+    @bot.on(GroupMessage)
+    async def query_lc_contest(event: GroupMessage):  # 查询最近比赛
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        m = re.match(r'lc', msg.strip())
+
+        if m:
+            print("查询力扣比赛")
+
+            # LAST_NC_TIME = int(time.time())
+            await bot.send(event, '查询中……')
+            await asyncio.sleep(1)
+
+            global LAST_LC_CONTEST_INFO
+
+            await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
+
+
+    # other
+    @bot.on(GroupMessage)
+    async def query_today(event: GroupMessage):
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        if msg == 'today':
+            res = ""
+
+            mon = datetime.datetime.now().month
+            day = datetime.datetime.now().day
+
+            print(LAST_CF_CONTEST_INFO)
+            print(LAST_LC_CONTEST_INFO)
+            print(LAST_ATC_CONTEST_INFO[0])
+            print(LAST_NC_CONTEST_INFO)
+            print(LAST_LC_CONTEST_INFO[0][0])
+
+            # CF
+            if time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday == day:
+                print(1)
+                res.join(LAST_CF_CONTEST_INFO + '\n')
+
+            # ATC
+            if LAST_ATC_CONTEST_INFO[1].month == mon and LAST_ATC_CONTEST_INFO[1].day == day:
+                print(2)
+                res += (LAST_ATC_CONTEST_INFO[0] + '\n')
+
+            # NC
+            if time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mday == day:
+                print(3)
+                res.join(LAST_NC_CONTEST_INFO + '\n')
+
+            # LC
+            if time.localtime(LAST_LC_TIME).tm_mon == mon and time.localtime(LAST_LC_TIME).tm_mday == day:
+                print(4)
+                res.join(LAST_LC_CONTEST_INFO + '\n')
+
+            print(res)
+
+            if res != '':
+                await bot.send(event, res)
+            else:
+                await bot.send(event, "今日无比赛")
+
+
+
     # daily
-    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
     async def update_contest_info():
         now = time.localtime()
         print()
@@ -326,6 +398,9 @@ if __name__ == '__main__':
 
         global LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME
         LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
+
+        global LAST_LC_CONTEST_INFO
+        LAST_LC_CONTEST_INFO = await lc_api.get_contest()
 
 
     # debug
