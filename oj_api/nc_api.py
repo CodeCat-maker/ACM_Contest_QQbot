@@ -30,7 +30,7 @@ async def get_contest():
                 break  # 只获取马上要举行的牛客比赛
 
         if lately_contest.__contains__('endTime') and lately_contest.__contains__('startTime'):
-            durationSeconds = (int(lately_contest['endTime']) - int(lately_contest['startTime'])) // 100
+            durationSeconds = (int(lately_contest['endTime']) - int(lately_contest['startTime'])) // 1000
         else:
             try_time += 1
 

@@ -288,9 +288,9 @@ if __name__ == '__main__':
     async def query_nc_contest(event: GroupMessage):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'牛客', msg.strip())
+        # m = re.match(r'牛客', msg.strip())
 
-        if m:
+        if msg == "牛客":
             global LAST_NC_TIME
             global LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME
 
@@ -323,9 +323,9 @@ if __name__ == '__main__':
     async def query_lc_contest(event: GroupMessage):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'lc', msg.strip())
+        # m = re.match(r'lc', msg.strip())
 
-        if m:
+        if msg == "lc":
             print("查询力扣比赛")
 
             # LAST_NC_TIME = int(time.time())
@@ -357,7 +357,7 @@ if __name__ == '__main__':
             # CF
             if time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday == day:
                 print(1)
-                res.join(LAST_CF_CONTEST_INFO + '\n')
+                res += (LAST_CF_CONTEST_INFO + '\n')
 
             # ATC
             if LAST_ATC_CONTEST_INFO[1].month == mon and LAST_ATC_CONTEST_INFO[1].day == day:
@@ -367,17 +367,17 @@ if __name__ == '__main__':
             # NC
             if time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mday == day:
                 print(3)
-                res.join(LAST_NC_CONTEST_INFO + '\n')
+                res += (LAST_NC_CONTEST_INFO + '\n')
 
             # LC
             if time.localtime(LAST_LC_TIME).tm_mon == mon and time.localtime(LAST_LC_TIME).tm_mday == day:
                 print(4)
-                res.join(LAST_LC_CONTEST_INFO + '\n')
+                res += (LAST_LC_CONTEST_INFO + '\n')
 
             print(res)
 
             if res != '':
-                await bot.send(event, res)
+                await bot.send(event, "为您查询到今日的比赛有：\n" + res)
             else:
                 await bot.send(event, "今日无比赛")
 
