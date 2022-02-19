@@ -28,7 +28,7 @@ LAST_NC_TIME = 0
 LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = asyncio.run(nc_api.get_contest())
 
 LAST_LC_TIME = 0
-LAST_LC_CONTEST_INFO = asyncio.run(lc_api.get_contest())
+LAST_LC_CONTEST_INFO, LAST_LC_CONTEST_BEGIN_TIME = asyncio.run(lc_api.get_contest())
 
 print(LAST_CF_CONTEST_INFO)
 print(LAST_CF_CONTEST_BEGIN_TIME)
@@ -87,9 +87,9 @@ async def query_today_contest():
         res += (LAST_NC_CONTEST_INFO + '\n')
 
     # LC
-    if time.localtime(LAST_LC_TIME).tm_mon == mon and time.localtime(LAST_LC_TIME).tm_mday == day:
+    if time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mday == day:
         print(4)
-        res += (LAST_LC_CONTEST_INFO + '\n')
+        res += (LAST_LC_CONTEST_INFO[0][0] + '\n')
 
     print(res)
 
