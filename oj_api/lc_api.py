@@ -76,7 +76,7 @@ async def get_contest():
 
         # print(res)
         res.sort(key=lambda x: x[1], reverse=False)
-        return res
+        return res, res[0][1]
     except:
         return -1
 
