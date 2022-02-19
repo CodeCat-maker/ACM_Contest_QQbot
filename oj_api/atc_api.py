@@ -82,7 +82,7 @@ async def get_contest_lately():
         contest_name,
         contest_time,
         "{}小时{:02d}分钟".format(int(during_time_hour), int(during_time_min)),
-        url + str(contest_url[1:])
+        "https://atcoder.jp/" + str(contest_url[1:])
     )
 
     # print(res)

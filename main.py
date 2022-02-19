@@ -7,7 +7,7 @@ import datetime
 from log import Log
 from oj_api import atc_api, cf_api, nc_api, lc_api
 from mirai.models import NewFriendRequestEvent
-from mirai import Startup, Shutdown
+from mirai import Startup, Shutdown, MessageEvent
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from mirai_extensions.trigger import HandlerControl, Filter
@@ -55,6 +55,47 @@ async def query_now_weather(city: str) -> str:
             return f'抱歉，没有找到{city}的天气数据。'
 
 
+async def query_today_contest():
+    global LAST_CF_CONTEST_INFO, LAST_LC_CONTEST_INFO, LAST_ATC_CONTEST_INFO, LAST_NC_CONTEST_INFO, LAST_LC_CONTEST_INFO
+
+    res = ""
+
+    mon = datetime.datetime.now().month
+    day = datetime.datetime.now().day
+
+    print(LAST_CF_CONTEST_INFO)
+    print(LAST_LC_CONTEST_INFO)
+    print(LAST_ATC_CONTEST_INFO[0])
+    print(LAST_NC_CONTEST_INFO)
+    print(LAST_LC_CONTEST_INFO[0][0])
+
+    # CF
+    if time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
+            LAST_CF_CONTEST_BEGIN_TIME).tm_mday == day:
+        print(1)
+        res += (LAST_CF_CONTEST_INFO + '\n')
+
+    # ATC
+    if LAST_ATC_CONTEST_INFO[1].month == mon and LAST_ATC_CONTEST_INFO[1].day == day:
+        print(2)
+        res += (LAST_ATC_CONTEST_INFO[0] + '\n')
+
+    # NC
+    if time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
+            LAST_NC_CONTEST_BEGIN_TIME).tm_mday == day:
+        print(3)
+        res += (LAST_NC_CONTEST_INFO + '\n')
+
+    # LC
+    if time.localtime(LAST_LC_TIME).tm_mon == mon and time.localtime(LAST_LC_TIME).tm_mday == day:
+        print(4)
+        res += (LAST_LC_CONTEST_INFO + '\n')
+
+    print(res)
+
+    return res
+
+
 if __name__ == '__main__':
     bot = Mirai(
         qq=3409201437,  # 改成你的机器人的 QQ 号
@@ -80,17 +121,18 @@ if __name__ == '__main__':
         await bot.allow(event)
 
 
-    @bot.on(FriendMessage)
-    async def on_friend_message(event: FriendMessage):
+    @bot.on(MessageEvent)
+    async def on_friend_message(event: MessageEvent):
         if str(event.message_chain) == '你好':
             await bot.send(event, 'Hello, World!')
 
 
-    @bot.on(GroupMessage)
-    async def show_list(event: GroupMessage):  # 功能列表展示
+    @bot.on(MessageEvent)
+    async def show_list(event: MessageEvent):  # 功能列表展示
         msg = "".join(map(str, event.message_chain[Plain]))
         if msg == ".help":
-            await bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
+            if isinstance(event, GroupMessage):
+                await bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
                                                         "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
                                                         "\n“cf” 通知最新的Codeforces比赛"
                                                         "\n“atc” 通知最新的AtCoder比赛"
@@ -99,24 +141,34 @@ if __name__ == '__main__':
                                                         "\n“lc” 通知最新的力扣比赛"
                                                         "\n “today” 查询今天比赛"
                                                         "\n“@上分上分上分 echo {xxx}” 重复xxx"])
+            else:
+                await bot.send(event, ["“查询天气 {城市}” 查询城市实时天气"
+                                        "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
+                                        "\n“cf” 通知最新的Codeforces比赛"
+                                        "\n“atc” 通知最新的AtCoder比赛"
+                                        "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
+                                        "\n“牛客” 通知最新的牛客比赛"
+                                        "\n“lc” 通知最新的力扣比赛"
+                                        "\n “today” 查询今天比赛"
+                                        "\n“@上分上分上分 echo {xxx}” 重复xxx"])
 
 
-    @bot.on(GroupMessage)
-    async def echo(event: GroupMessage):  # 复读机
+    @bot.on(MessageEvent)
+    async def echo(event: MessageEvent):  # 复读机
         msg = "".join(map(str, event.message_chain[Plain])).strip()
         m = re.match(r'^echo\s*(\w+)\s*$', msg)
         if m and At(bot.qq) in event.message_chain:
             await bot.send(event, msg)
 
 
-    @bot.on(GroupMessage)
-    async def on_group_message(event: GroupMessage):  # 返回
+    @bot.on(MessageEvent)
+    async def on_group_message(event: MessageEvent):  # 返回
         if At(bot.qq) in event.message_chain and len("".join(map(str, event.message_chain[Plain]))) == 0:
             await bot.send(event, [At(event.sender.id), '你在叫我吗？'])
 
 
-    @bot.on(GroupMessage)
-    async def weather_query(event: GroupMessage):  # 天气查询
+    @bot.on(MessageEvent)
+    async def weather_query(event: MessageEvent):  # 天气查询
         # 从消息链中取出文本
         msg = "".join(map(str, event.message_chain[Plain]))
         # 匹配指令
@@ -133,8 +185,8 @@ if __name__ == '__main__':
 
     # CF
 
-    @bot.on(GroupMessage)
-    async def query_cf_rank(event: GroupMessage):  # 查询对应人的分数
+    @bot.on(MessageEvent)
+    async def query_cf_rank(event: MessageEvent):  # 查询对应人的分数
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'^查询CF分数\s*(\w+)\s*$', msg.strip())
@@ -163,8 +215,8 @@ if __name__ == '__main__':
                 await bot.send(event, "不存在这个用户或查询出错哦")
 
 
-    @bot.on(GroupMessage)
-    async def query_cf_contest(event: GroupMessage):  # 查询最近比赛
+    @bot.on(MessageEvent)
+    async def query_cf_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'cf', msg.strip())
@@ -178,14 +230,14 @@ if __name__ == '__main__':
 
             print("查询cf比赛")
 
-            # if int(time.time()) - LAST_CF_TIME < 3600:
-            #     await bot.send(event, LAST_CF_CONTEST_INFO)
-            #     return
+            if int(time.time()) - LAST_CF_TIME < 5:
+                await bot.send(event, LAST_CF_CONTEST_INFO)
+                return
 
             LAST_CF_TIME = int(time.time())
             await bot.send(event, '查询中……')
             await asyncio.sleep(1)
-            # LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
+            LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
             await bot.send(event, LAST_CF_CONTEST_INFO)
 
 
@@ -215,20 +267,9 @@ if __name__ == '__main__':
         LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
 
 
-    @scheduler.scheduled_job(CronTrigger(day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday, hour=10, minute=30))
-    async def notify_contest_info():
-        # 发送当日信息
-        await bot.send_friend_message(1095490883, LAST_CF_CONTEST_INFO)  # lzd
-        await bot.send_friend_message(942845546, LAST_CF_CONTEST_INFO)  # wlx
-        # await bot.send_friend_message(2442530380, LAST_CF_CONTEST_INFO)  # zsh
-
-        await bot.send_group_message(763537993, LAST_CF_CONTEST_INFO)  # 纳新群
-        await bot.send_group_message(687601411, LAST_CF_CONTEST_INFO)  # 训练群
-
-
     # ATC
-    @bot.on(GroupMessage)
-    async def query_atc_contest(event: GroupMessage):  # 查询最近比赛
+    @bot.on(MessageEvent)
+    async def query_atc_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'atc', msg.strip())
@@ -241,7 +282,7 @@ if __name__ == '__main__':
 
             print("查询atc比赛")
 
-            if int(time.time()) - LAST_ATC_TIME < 3600:
+            if int(time.time()) - LAST_ATC_TIME < 5:
                 await bot.send(event, LAST_ATC_CONTEST_INFO[0])
                 return
 
@@ -253,8 +294,8 @@ if __name__ == '__main__':
             await bot.send(event, LAST_ATC_CONTEST_INFO[0])
 
 
-    @bot.on(GroupMessage)
-    async def query_atc_rank(event: GroupMessage):  # 查询对应人的分数
+    @bot.on(MessageEvent)
+    async def query_atc_rank(event: MessageEvent):  # 查询对应人的分数
         msg = "".join(map(str, event.message_chain[Plain]))
 
         m = re.match(r'^查询ATC分数\s*(\w+)\s*$', msg.strip())
@@ -284,8 +325,8 @@ if __name__ == '__main__':
 
 
     # nowcoder
-    @bot.on(GroupMessage)
-    async def query_nc_contest(event: GroupMessage):  # 查询最近比赛
+    @bot.on(MessageEvent)
+    async def query_nc_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
         # m = re.match(r'牛客', msg.strip())
@@ -296,14 +337,14 @@ if __name__ == '__main__':
 
             print("查询牛客比赛")
 
-            # if int(time.time()) - LAST_CF_TIME < 3600:
-            #     await bot.send(event, LAST_CF_CONTEST_INFO)
-            #     return
+            if int(time.time()) - LAST_NC_TIME < 5:
+                await bot.send(event, LAST_NC_CONTEST_INFO)
+                return
 
             LAST_NC_TIME = int(time.time())
             await bot.send(event, '查询中……')
             await asyncio.sleep(1)
-            # LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
+            LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
             await bot.send(event, LAST_NC_CONTEST_INFO)
 
 
@@ -319,8 +360,8 @@ if __name__ == '__main__':
 
 
     # 力扣
-    @bot.on(GroupMessage)
-    async def query_lc_contest(event: GroupMessage):  # 查询最近比赛
+    @bot.on(MessageEvent)
+    async def query_lc_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
         # m = re.match(r'lc', msg.strip())
@@ -328,56 +369,29 @@ if __name__ == '__main__':
         if msg == "lc":
             print("查询力扣比赛")
 
-            # LAST_NC_TIME = int(time.time())
+            global LAST_LC_TIME, LAST_LC_CONTEST_INFO
+
+            if int(time.time()) - LAST_LC_TIME < 5:
+                await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
+                return
+
+            LAST_LC_TIME = int(time.time())
             await bot.send(event, '查询中……')
             await asyncio.sleep(1)
-
-            global LAST_LC_CONTEST_INFO
 
             await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
 
 
     # other
-    @bot.on(GroupMessage)
-    async def query_today(event: GroupMessage):
+    @bot.on(MessageEvent)
+    async def query_today(event: MessageEvent):
         msg = "".join(map(str, event.message_chain[Plain]))
 
         if msg == 'today':
-            res = ""
-
-            mon = datetime.datetime.now().month
-            day = datetime.datetime.now().day
-
-            print(LAST_CF_CONTEST_INFO)
-            print(LAST_LC_CONTEST_INFO)
-            print(LAST_ATC_CONTEST_INFO[0])
-            print(LAST_NC_CONTEST_INFO)
-            print(LAST_LC_CONTEST_INFO[0][0])
-
-            # CF
-            if time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday == day:
-                print(1)
-                res += (LAST_CF_CONTEST_INFO + '\n')
-
-            # ATC
-            if LAST_ATC_CONTEST_INFO[1].month == mon and LAST_ATC_CONTEST_INFO[1].day == day:
-                print(2)
-                res += (LAST_ATC_CONTEST_INFO[0] + '\n')
-
-            # NC
-            if time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mday == day:
-                print(3)
-                res += (LAST_NC_CONTEST_INFO + '\n')
-
-            # LC
-            if time.localtime(LAST_LC_TIME).tm_mon == mon and time.localtime(LAST_LC_TIME).tm_mday == day:
-                print(4)
-                res += (LAST_LC_CONTEST_INFO + '\n')
-
-            print(res)
+            res = await query_today_contest()
 
             if res != '':
-                await bot.send(event, "为您查询到今日的比赛有：\n" + res)
+                await bot.send(event, "为您查询到今日的比赛有：\n\n" + res.strip())
             else:
                 await bot.send(event, "今日无比赛")
 
@@ -401,6 +415,21 @@ if __name__ == '__main__':
 
         global LAST_LC_CONTEST_INFO
         LAST_LC_CONTEST_INFO = await lc_api.get_contest()
+
+
+    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
+    async def notify_contest_info():
+        res = await query_today_contest()
+
+        if res != '':
+            # 发送当日信息
+            msg = "今日的比赛有：\n\n" + res.strip()
+            await bot.send_friend_message(1095490883, msg)  # lzd
+            await bot.send_friend_message(942845546, msg)  # wlx
+            await bot.send_friend_message(2442530380, msg)  # zsh
+
+            await bot.send_group_message(763537993, msg)  # 纳新群
+            await bot.send_group_message(687601411, msg)  # 训练群
 
 
     # debug
