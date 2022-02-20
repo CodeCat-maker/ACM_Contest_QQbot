@@ -78,7 +78,7 @@ async def get_contest_lately():
     os.remove("./atc_contest.html")
 
     res = "下一场AtCoder比赛为：\n"
-    res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}\n".format(
+    res += "名称：{}\n开始时间：{}\n持续时间：{}\n比赛地址：{}".format(
         contest_name,
         contest_time,
         "{}小时{:02d}分钟".format(int(during_time_hour), int(during_time_min)),
@@ -90,6 +90,6 @@ async def get_contest_lately():
 
 if __name__ == '__main__':
     # asyncio.run(get_contest_lately())
-    print(type(asyncio.run(get_contest_lately())[1].month))
+    # print(asyncio.run(get_contest_lately())[0])
     # print(asyncio.run(get_usr_rank("432423")))
     pass

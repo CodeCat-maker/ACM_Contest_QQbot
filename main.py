@@ -73,23 +73,23 @@ async def query_today_contest():
     if time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
             LAST_CF_CONTEST_BEGIN_TIME).tm_mday == day:
         print(1)
-        res += (LAST_CF_CONTEST_INFO + '\n')
+        res += (LAST_CF_CONTEST_INFO + '\n\n')
 
     # ATC
     if LAST_ATC_CONTEST_INFO[1].month == mon and LAST_ATC_CONTEST_INFO[1].day == day:
         print(2)
-        res += (LAST_ATC_CONTEST_INFO[0] + '\n')
+        res += (LAST_ATC_CONTEST_INFO[0] + '\n\n')
 
     # NC
     if time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
             LAST_NC_CONTEST_BEGIN_TIME).tm_mday == day:
         print(3)
-        res += (LAST_NC_CONTEST_INFO + '\n')
+        res += (LAST_NC_CONTEST_INFO + '\n\n')
 
     # LC
     if time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mday == day:
         print(4)
-        res += (LAST_LC_CONTEST_INFO[0][0] + '\n')
+        res += (LAST_LC_CONTEST_INFO[0][0] + '\n\n')
 
     print(res)
 
@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
             LAST_CF_TIME = int(time.time())
             await bot.send(event, '查询中……')
-            await asyncio.sleep(1)
+            # await asyncio.sleep(1)
             LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
             await bot.send(event, LAST_CF_CONTEST_INFO)
 
@@ -288,7 +288,7 @@ if __name__ == '__main__':
 
             LAST_ATC_TIME = int(time.time())
             await bot.send(event, '查询中……')
-            await asyncio.sleep(1)
+            # await asyncio.sleep(1)
 
             LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
             await bot.send(event, LAST_ATC_CONTEST_INFO[0])
@@ -343,7 +343,7 @@ if __name__ == '__main__':
 
             LAST_NC_TIME = int(time.time())
             await bot.send(event, '查询中……')
-            await asyncio.sleep(1)
+            # await asyncio.sleep(1)
             LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
             await bot.send(event, LAST_NC_CONTEST_INFO)
 
@@ -377,7 +377,7 @@ if __name__ == '__main__':
 
             LAST_LC_TIME = int(time.time())
             await bot.send(event, '查询中……')
-            await asyncio.sleep(1)
+            # await asyncio.sleep(1)
 
             await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
 
