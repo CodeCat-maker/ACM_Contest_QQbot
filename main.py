@@ -417,7 +417,7 @@ if __name__ == '__main__':
         LAST_LC_CONTEST_INFO = await lc_api.get_contest()
 
 
-    @scheduler.scheduled_job(CronTrigger(hour=10, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=9, minute=30))
     async def notify_contest_info():
         res = await query_today_contest()
 
