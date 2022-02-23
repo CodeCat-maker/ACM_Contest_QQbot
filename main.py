@@ -450,6 +450,21 @@ if __name__ == '__main__':
             ])
             await bot.send(event, message_chain)
 
+    async def ggg_query(event: MessageEvent):
+        # 从消息链中取出文本
+        msg = "".join(map(str, event.message_chain[Plain]))
+        # 匹配指令
+        m = re.match(r'管哥哥', msg.strip())
+        if m:
+            print("setu")
+            img_list = os.listdir('./pic/ggg/')
+            img_local = './pic/ggg/' + random.choice(img_list)
+            print(img_local)
+            message_chain = MessageChain([
+                await Image.from_local(img_local)
+            ])
+            await bot.send(event, message_chain)
+
     # daily
     @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
     async def update_contest_info():
