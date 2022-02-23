@@ -189,9 +189,9 @@ if __name__ == '__main__':
     async def query_cf_rank(event: MessageEvent):  # 查询对应人的分数
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'^查询CF分数\s*(\w+)\s*$', msg.strip())
+        m = re.match(r'^查询CF分数\s*([\w.-]+)\s*$', msg.strip())
         if m is None:
-            m = re.match(r'^查询cf分数\s*(\w+)\s*$', msg.strip())
+            m = re.match(r'^查询cf分数\s*([\w.-]+)\s*$', msg.strip())
         if m is None:
             m = re.match(r'^查询(.*)的CF分数$', msg.strip())
         if m is None:
