@@ -450,6 +450,8 @@ if __name__ == '__main__':
             ])
             await bot.send(event, message_chain)
 
+
+    @bot.on(MessageEvent)
     async def ggg_query(event: MessageEvent):
         # 从消息链中取出文本
         msg = "".join(map(str, event.message_chain[Plain]))
