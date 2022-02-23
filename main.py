@@ -1,10 +1,13 @@
+import os
 import re
 import sys
 import time
 import asyncio
+import random
 import httpx
 import datetime
 from log import Log
+from other_operation import random_qcjj
 from oj_api import atc_api, cf_api, nc_api, lc_api
 from mirai.models import NewFriendRequestEvent
 from mirai import Startup, Shutdown, MessageEvent
@@ -132,25 +135,27 @@ if __name__ == '__main__':
         msg = "".join(map(str, event.message_chain[Plain]))
         if msg == ".help":
             if isinstance(event, GroupMessage):
-                await bot.send(event, [At(event.sender.id), "\n“查询天气 {城市}” 查询城市实时天气"
-                                                        "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
-                                                        "\n“cf” 通知最新的Codeforces比赛"
-                                                        "\n“atc” 通知最新的AtCoder比赛"
-                                                        "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
-                                                        "\n“牛客” 通知最新的牛客比赛"
-                                                        "\n“lc” 通知最新的力扣比赛"
-                                                        "\n “today” 查询今天比赛"
-                                                        "\n“@上分上分上分 echo {xxx}” 重复xxx"])
+                await bot.send(event, [At(event.sender.id), "\n查询天气 城市 -> 查询城市实时天气"
+                                                            "\n查询cf分数 id -> 查询对应id的 cf 分数"
+                                                            "\ncf -> 近三场 cf 比赛"
+                                                            "\natc -> 最新的AtCoder比赛"
+                                                            "\n牛客 -> 最新的牛客比赛"
+                                                            "\nlc -> 最新的力扣比赛"
+                                                            "\ntoday -> 查询今天比赛"
+                                                            "\n来只清楚 -> 随机qcjj"
+                                                            "\nsetu/涩图 -> 涩图"
+                                                            "\nbug联系 -> 1095490883"])
             else:
-                await bot.send(event, ["“查询天气 {城市}” 查询城市实时天气"
-                                        "\n“查询CF分数 {id}” 查询对应用户的Codeforces分数"
-                                        "\n“cf” 通知最新的Codeforces比赛"
-                                        "\n“atc” 通知最新的AtCoder比赛"
-                                        "\n“查询ATC分数 {id}” 查询对应用户的AtCoder分数"
-                                        "\n“牛客” 通知最新的牛客比赛"
-                                        "\n“lc” 通知最新的力扣比赛"
-                                        "\n “today” 查询今天比赛"
-                                        "\n“@上分上分上分 echo {xxx}” 重复xxx"])
+                await bot.send(event, ["\n查询天气 城市 -> 查询城市实时天气"
+                                                            "\n查询cf分数 id -> 查询对应id的 cf 分数"
+                                                            "\ncf -> 近三场 cf 比赛"
+                                                            "\natc -> 最新的AtCoder比赛"
+                                                            "\n牛客 -> 最新的牛客比赛"
+                                                            "\nlc -> 最新的力扣比赛"
+                                                            "\ntoday -> 查询今天比赛"
+                                                            "\n来只清楚 -> 随机qcjj"
+                                                            "\nsetu/涩图 -> 涩图"
+                                                            "\nbug联系 -> 1095490883"])
 
 
     @bot.on(MessageEvent)
@@ -393,9 +398,57 @@ if __name__ == '__main__':
             if res != '':
                 await bot.send(event, "为您查询到今日的比赛有：\n\n" + res.strip())
             else:
-                await bot.send(event, "今日无比赛")
+                await bot.send(event, "今日无比赛哦~")
 
 
+    @bot.on(MessageEvent)
+    async def qcjj_query(event: MessageEvent):
+        # 从消息链中取出文本
+        msg = "".join(map(str, event.message_chain[Plain]))
+        # 匹配指令
+        m = re.match(r'来只清楚', msg.strip())
+        if m:
+            print("来只清楚")
+            img_list = os.listdir('./pic/qcjj/')
+            img_local = './pic/qcjj/' + random.choice(img_list)
+            print(img_local)
+            message_chain = MessageChain([
+                await Image.from_local(img_local)
+            ])
+            await bot.send(event, message_chain)
+
+    # setu
+    @bot.on(MessageEvent)
+    async def setu_query(event: MessageEvent):
+        # 从消息链中取出文本
+        msg = "".join(map(str, event.message_chain[Plain]))
+        # 匹配指令
+        m = re.match(r'setu', msg.strip())
+        if m is None:
+            m = re.match(r'涩图', msg.strip())
+        if m:
+            print("setu")
+            img_list = os.listdir('./pic/setu/')
+            img_local = './pic/setu/' + random.choice(img_list)
+            print(img_local)
+            message_chain = MessageChain([
+                await Image.from_local(img_local)
+            ])
+            await bot.send(event, message_chain)
+
+    # color_img
+    @bot.on(MessageEvent)
+    async def color_query(event: MessageEvent):
+        # 从消息链中取出文本
+        msg = "".join(map(str, event.message_chain[Plain]))
+        # 匹配指令
+        m = re.match(r'色图', msg.strip())
+        if m:
+            print("色图")
+            message_chain = MessageChain([
+                await Image.from_local('./pic/color.jpg')
+            ])
+            await bot.send(event, message_chain)
 
     # daily
     @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
