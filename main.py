@@ -137,7 +137,7 @@ if __name__ == '__main__':
             if isinstance(event, GroupMessage):
                 await bot.send(event, [At(event.sender.id), "\n查询天气 城市 -> 查询城市实时天气"
                                                             "\n查询cf分数 id -> 查询对应id的 cf 分数"
-                                                            "\ncf -> 近三场 cf 比赛"
+                                                            "\ncf -> 近场 cf 比赛"
                                                             "\natc -> 最新的AtCoder比赛"
                                                             "\n牛客 -> 最新的牛客比赛"
                                                             "\nlc -> 最新的力扣比赛"
@@ -148,7 +148,7 @@ if __name__ == '__main__':
             else:
                 await bot.send(event, ["\n查询天气 城市 -> 查询城市实时天气"
                                                             "\n查询cf分数 id -> 查询对应id的 cf 分数"
-                                                            "\ncf -> 近三场 cf 比赛"
+                                                            "\ncf -> 近场 cf 比赛"
                                                             "\natc -> 最新的AtCoder比赛"
                                                             "\n牛客 -> 最新的牛客比赛"
                                                             "\nlc -> 最新的力扣比赛"
@@ -246,9 +246,9 @@ if __name__ == '__main__':
             await bot.send(event, LAST_CF_CONTEST_INFO)
 
 
-    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon,
-                                         day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mday,
-                                         hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_hour,
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_mon,
+                                         day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_mday,
+                                         hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_hour,
                                          minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
     async def cf_shang_hao():
         message_chain = MessageChain([
@@ -350,16 +350,16 @@ if __name__ == '__main__':
             await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
             LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
-            await bot.send(event, LAST_NC_CONTEST_INFO)
+            await bot.send(event, LAST_NC_CONTEST_INFO if LAST_NC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
 
 
-    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon,
-                                         day=time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mday,
-                                         hour=time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_hour,
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_mon,
+                                         day=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_mday,
+                                         hour=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_hour,
                                          minute=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
     async def nc_shang_hao():
         message_chain = MessageChain([
-            await Image.from_local('pic/up_nc.jpg')
+            await Image.from_local('pic/up_nc.png')
         ])
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
@@ -468,7 +468,7 @@ if __name__ == '__main__':
             await bot.send(event, message_chain)
 
     # daily
-    @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=7, minute=30))
     async def update_contest_info():
         now = time.localtime()
         print()
@@ -487,7 +487,7 @@ if __name__ == '__main__':
         LAST_LC_CONTEST_INFO = await lc_api.get_contest()
 
 
-    @scheduler.scheduled_job(CronTrigger(hour=9, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
     async def notify_contest_info():
         res = await query_today_contest()
 
