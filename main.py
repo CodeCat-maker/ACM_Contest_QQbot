@@ -491,15 +491,23 @@ if __name__ == '__main__':
     async def notify_contest_info():
         res = await query_today_contest()
 
+        friends = ['1095490883', '942845546', '2442530380']
+        groups = ['687601411', '763537993']
+
         if res != '':
             # 发送当日信息
             msg = "今日的比赛有：\n\n" + res.strip()
-            await bot.send_friend_message(1095490883, msg)  # lzd
-            await bot.send_friend_message(942845546, msg)  # wlx
-            await bot.send_friend_message(2442530380, msg)  # zsh
+            for friend in friends:
+                try:
+                    await bot.send_friend_message(friend, msg)  # 发送个人
+                except:
+                    print("不存在qq号为 {} 的好友".format(friend))
 
-            await bot.send_group_message(763537993, msg)  # 纳新群
-            await bot.send_group_message(687601411, msg)  # 训练群
+            for group in groups:
+                try:
+                    await bot.send_group_message(group, msg)  # 发送群组
+                except:
+                    print("不存在群号为 {} 的群组".format(group))
 
 
     # debug
