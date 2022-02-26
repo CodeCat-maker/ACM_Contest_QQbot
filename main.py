@@ -90,7 +90,8 @@ async def query_today_contest():
         res += (LAST_NC_CONTEST_INFO + '\n\n')
 
     # LC
-    if time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mday == day:
+    if time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
+            LAST_LC_CONTEST_BEGIN_TIME).tm_mday == day:
         print(4)
         res += (LAST_LC_CONTEST_INFO[0][0] + '\n\n')
 
@@ -135,7 +136,7 @@ if __name__ == '__main__':
         msg = "".join(map(str, event.message_chain[Plain]))
         if msg == ".help":
             if isinstance(event, GroupMessage):
-                await bot.send(event, [At(event.sender.id), "\n查询天气 城市 -> 查询城市实时天气"
+                await bot.send(event, [At(event.sender.id), "\n查询天气 城市 -> 查询市级城市实时天气"
                                                             "\n查询cf分数 id -> 查询对应id的 cf 分数"
                                                             "\ncf -> 近场 cf 比赛"
                                                             "\natc -> 最新的AtCoder比赛"
@@ -146,16 +147,16 @@ if __name__ == '__main__':
                                                             "\nsetu/涩图 -> 涩图"
                                                             "\nbug联系 -> 1095490883"])
             else:
-                await bot.send(event, ["\n查询天气 城市 -> 查询城市实时天气"
-                                                            "\n查询cf分数 id -> 查询对应id的 cf 分数"
-                                                            "\ncf -> 近场 cf 比赛"
-                                                            "\natc -> 最新的AtCoder比赛"
-                                                            "\n牛客 -> 最新的牛客比赛"
-                                                            "\nlc -> 最新的力扣比赛"
-                                                            "\ntoday -> 查询今天比赛"
-                                                            "\n来只清楚 -> 随机qcjj"
-                                                            "\nsetu/涩图 -> 涩图"
-                                                            "\nbug联系 -> 1095490883"])
+                await bot.send(event, ["\n查询天气 城市 -> 查询市级城市实时天气"
+                                       "\n查询cf分数 id -> 查询对应id的 cf 分数"
+                                       "\ncf -> 近场 cf 比赛"
+                                       "\natc -> 最新的AtCoder比赛"
+                                       "\n牛客 -> 最新的牛客比赛"
+                                       "\nlc -> 最新的力扣比赛"
+                                       "\ntoday -> 查询今天比赛"
+                                       "\n来只清楚 -> 随机qcjj"
+                                       "\nsetu/涩图 -> 涩图"
+                                       "\nbug联系 -> 1095490883"])
 
 
     @bot.on(MessageEvent)
@@ -183,7 +184,7 @@ if __name__ == '__main__':
             # 取出指令中的地名
             city = m.group(1)
             print(city)
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             # 发送天气消息
             await bot.send(event, await query_now_weather(city))
 
@@ -212,7 +213,7 @@ if __name__ == '__main__':
                 return
 
             LAST_CF_TIME = int(time.time())
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             statue = await cf_api.get_usr_rating(name)
             if statue != -1:
                 await bot.send(event, statue)
@@ -240,7 +241,7 @@ if __name__ == '__main__':
                 return
 
             LAST_CF_TIME = int(time.time())
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
             LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
             await bot.send(event, LAST_CF_CONTEST_INFO)
@@ -292,7 +293,7 @@ if __name__ == '__main__':
                 return
 
             LAST_ATC_TIME = int(time.time())
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
 
             LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
@@ -321,7 +322,7 @@ if __name__ == '__main__':
                 return
 
             LAST_ATC_TIME = int(time.time())
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             statue = await atc_api.get_usr_rank(name)
             if statue != -1:
                 await bot.send(event, statue)
@@ -330,7 +331,7 @@ if __name__ == '__main__':
 
 
     # nowcoder
-    
+
     @bot.on(MessageEvent)
     async def query_nc_rating(event: MessageEvent):  # 查询牛客rating
         msg = "".join(map(str, event.message_chain[Plain]))
@@ -339,7 +340,8 @@ if __name__ == '__main__':
             uname = m.group(1)
             rating = await nc_api.get_nc_rating(uname)
             await bot.send(event, rating)
-            
+
+
     @bot.on(MessageEvent)
     async def query_nc_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
@@ -357,7 +359,7 @@ if __name__ == '__main__':
                 return
 
             LAST_NC_TIME = int(time.time())
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
             LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
             await bot.send(event, LAST_NC_CONTEST_INFO if LAST_NC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
@@ -391,7 +393,7 @@ if __name__ == '__main__':
                 return
 
             LAST_LC_TIME = int(time.time())
-            await bot.send(event, '查询中……')
+            # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
 
             await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
@@ -427,6 +429,7 @@ if __name__ == '__main__':
             ])
             await bot.send(event, message_chain)
 
+
     # setu
     @bot.on(MessageEvent)
     async def setu_query(event: MessageEvent):
@@ -445,6 +448,7 @@ if __name__ == '__main__':
                 await Image.from_local(img_local)
             ])
             await bot.send(event, message_chain)
+
 
     # color_img
     @bot.on(MessageEvent)
@@ -476,6 +480,7 @@ if __name__ == '__main__':
                 await Image.from_local(img_local)
             ])
             await bot.send(event, message_chain)
+
 
     # daily
     @scheduler.scheduled_job(CronTrigger(hour=7, minute=30))

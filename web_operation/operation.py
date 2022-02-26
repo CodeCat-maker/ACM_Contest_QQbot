@@ -13,7 +13,7 @@ async def get_html(url):
         r = await client.get(url=url, headers=headers)
 
     # r.encoding = r.apparent_encoding
-    await asyncio.sleep(5)
+    # await asyncio.sleep(5)
     return r.text
 
 
@@ -34,7 +34,7 @@ async def get_json(url):
         # print(url_text)
         # json_data = json.loads(url_text)
         json_data = response.json()
-        await asyncio.sleep(5)
+        # await asyncio.sleep(5)
         return json_data
     except:
         return -1
