@@ -330,6 +330,16 @@ if __name__ == '__main__':
 
 
     # nowcoder
+    
+    @bot.on(MessageEvent)
+    async def query_nc_rating(event: MessageEvent):  # 查询牛客rating
+        msg = "".join(map(str, event.message_chain[Plain]))
+        m = re.match(r'^查询牛客分数\s*([\u4e00-\u9fa5\w.-]+)\s*$', msg.strip())
+        if m:
+            uname = m.group(1)
+            rating = await nc_api.get_nc_rating(uname)
+            await bot.send(event, rating)
+            
     @bot.on(MessageEvent)
     async def query_nc_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))

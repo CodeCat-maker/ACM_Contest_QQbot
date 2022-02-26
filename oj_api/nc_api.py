@@ -4,8 +4,21 @@ import time
 import datetime
 import asyncio
 import pprint
+from lxml import etree
+import requests
 from dateutil.relativedelta import relativedelta
 
+async def get_nc_rating(uname):
+    url = "https://ac.nowcoder.com/acm/contest/rating-index?searchUserName=" + uname
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36'
+    }
+    resp = requests.get(url=url, headers=headers)
+    text = resp.text
+    zm = text.encode(resp.encoding).decode('utf-8')
+    xx = etree.fromstring(zm, parser=etree.HTMLParser())
+    rating = xx.xpath('/html/body/div/div[2]/div/div/div[2]/table/tbody/tr/td[5]/span/text()')
+    return "“{}”当前牛客rating为：{}".format(uname, rating[0])
 
 async def get_contest():
     async def find():
