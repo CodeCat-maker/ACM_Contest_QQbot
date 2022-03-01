@@ -26,6 +26,7 @@
   * （还没想好）
 * 通过qq添加qcjj图片
 * 完善反爬措施以适应大群请求（将请求本地化）
+* ✨根据比赛安排生成ics文件并提供下载，以便自动将日程加载到电脑日历中
 * ...
 
 目前已知bug：
@@ -38,6 +39,7 @@
 
 1. 环境配置
    * 请参照YiriMirai的教程环境配置：https://yiri-mirai.wybxc.cc/tutorials/01/configuration
+   * 建议更新Mirai到最新版本，使用命令`./mcl -u`
 2. 使用Mirai登陆qq（如果是linux服务器，参照官网教程，如何挂起而不退出：https://yiri-mirai.wybxc.cc/tutorials/02/linux）
 3. clone到本地或者服务器中
 ~~~shell

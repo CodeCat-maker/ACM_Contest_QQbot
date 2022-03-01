@@ -8,7 +8,7 @@ import httpx
 import datetime
 from log import Log
 from other_operation import random_qcjj
-from oj_api import atc_api, cf_api, nc_api, lc_api
+from oj_api import cf_api, atc_api, lc_api, nc_api, Contest
 from mirai.models import NewFriendRequestEvent
 from mirai import Startup, Shutdown, MessageEvent
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -21,21 +21,18 @@ sys.stderr = Log.Logger()
 scheduler = AsyncIOScheduler()
 API_KEY = 'SWeKQBWfoYiQFuZSJ'
 
-LAST_CF_TIME = 0
-LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = asyncio.run(cf_api.get_contest())
+cf = cf_api.CF()
 
-LAST_ATC_TIME = 0
-LAST_ATC_CONTEST_INFO = asyncio.run(atc_api.get_contest_lately())
+atc = atc_api.ATC()
 
-LAST_NC_TIME = 0
-LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = asyncio.run(nc_api.get_contest())
+nc = nc_api.NC()
 
-LAST_LC_TIME = 0
-LAST_LC_CONTEST_INFO, LAST_LC_CONTEST_BEGIN_TIME = asyncio.run(lc_api.get_contest())
+lc = lc_api.LC()
 
-print(LAST_CF_CONTEST_INFO)
-print(LAST_CF_CONTEST_BEGIN_TIME)
-print(LAST_CF_CONTEST_DURING_TIME)
+print(cf.info)
+print(atc.info)
+print(nc.info)
+print(lc.info)
 
 
 async def query_now_weather(city: str) -> str:
@@ -59,41 +56,42 @@ async def query_now_weather(city: str) -> str:
 
 
 async def query_today_contest():
-    global LAST_CF_CONTEST_INFO, LAST_LC_CONTEST_INFO, LAST_ATC_CONTEST_INFO, LAST_NC_CONTEST_INFO, LAST_LC_CONTEST_INFO
+    global cf, atc, nc, lc
 
     res = ""
 
     mon = datetime.datetime.now().month
     day = datetime.datetime.now().day
 
-    print(LAST_CF_CONTEST_INFO)
-    print(LAST_LC_CONTEST_INFO)
-    print(LAST_ATC_CONTEST_INFO[0])
-    print(LAST_NC_CONTEST_INFO)
-    print(LAST_LC_CONTEST_INFO[0][0])
+    print(cf.info)
+    print(lc.info)
+    print(atc.info)
+    print(nc.info)
+    print(lc.info)
 
     # CF
-    if time.localtime(LAST_CF_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
-            LAST_CF_CONTEST_BEGIN_TIME).tm_mday == day:
+    if time.localtime(cf.begin_time).tm_mon == mon and time.localtime(
+            cf.begin_time).tm_mday == day:
         print(1)
-        res += (LAST_CF_CONTEST_INFO + '\n\n')
+        res += (cf.info + '\n\n')
 
     # ATC
-    if LAST_ATC_CONTEST_INFO[1].month == mon and LAST_ATC_CONTEST_INFO[1].day == day:
+    if time.localtime(atc.begin_time).tm_mon == mon and time.localtime(
+            atc.begin_time).tm_mday == day:
         print(2)
-        res += (LAST_ATC_CONTEST_INFO[0] + '\n\n')
+        res += (atc.info + '\n\n')
 
     # NC
-    if time.localtime(LAST_NC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
-            LAST_NC_CONTEST_BEGIN_TIME).tm_mday == day:
+    if time.localtime(nc.begin_time).tm_mon == mon and time.localtime(
+            nc.begin_time).tm_mday == day:
         print(3)
-        res += (LAST_NC_CONTEST_INFO + '\n\n')
+        res += (nc.info + '\n\n')
 
     # LC
-    if time.localtime(LAST_LC_CONTEST_BEGIN_TIME).tm_mon == mon and time.localtime(
-            LAST_LC_CONTEST_BEGIN_TIME).tm_mday == day:
+    if time.localtime(lc.begin_time).tm_mon == mon and time.localtime(
+            lc.begin_time).tm_mday == day:
         print(4)
-        res += (LAST_LC_CONTEST_INFO[0][0] + '\n\n')
+        res += (lc.info + '\n\n')
 
     print(res)
 
@@ -147,7 +145,7 @@ if __name__ == '__main__':
                                                             "\nsetu/涩图 -> 涩图"
                                                             "\nbug联系 -> 1095490883"])
             else:
-                await bot.send(event, ["\n查询天气 城市 -> 查询市级城市实时天气"
+                await bot.send(event, ["查询天气 城市 -> 查询市级城市实时天气"
                                        "\n查询cf分数 id -> 查询对应id的 cf 分数"
                                        "\ncf -> 近场 cf 比赛"
                                        "\natc -> 最新的AtCoder比赛"
@@ -207,14 +205,13 @@ if __name__ == '__main__':
             name = m.group(1)
             # print(name)
 
-            global LAST_CF_TIME
-            if int(time.time()) - LAST_CF_TIME < 5:  # 每次询问要大于5秒
-                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_CF_TIME + 5 - int(time.time())))
+            global cf
+            if int(time.time()) - cf.updated_time < 5:  # 每次询问要大于5秒
+                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(cf.updated_time + 5 - int(time.time())))
                 return
 
-            LAST_CF_TIME = int(time.time())
             # await bot.send(event, '查询中……')
-            statue = await cf_api.get_usr_rating(name)
+            statue = await cf.get_ranting(name)
             if statue != -1:
                 await bot.send(event, statue)
             else:
@@ -225,32 +222,30 @@ if __name__ == '__main__':
     async def query_cf_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'cf', msg.strip())
+        # m = re.match(r'cf', msg.strip())
+        #
+        # if m is None:
+        #     m = re.match(r'CF', msg.strip())
 
-        if m is None:
-            m = re.match(r'CF', msg.strip())
-
-        if m:
-            global LAST_CF_TIME
-            global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
+        if msg.strip() == 'CF' or msg.strip() == 'cf':
+            global cf
 
             print("查询cf比赛")
 
-            if int(time.time()) - LAST_CF_TIME < 5:
-                await bot.send(event, LAST_CF_CONTEST_INFO)
+            if int(time.time()) - cf.updated_time < 5:
+                await bot.send(event, cf.info)
                 return
 
-            LAST_CF_TIME = int(time.time())
             # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
-            LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
-            await bot.send(event, LAST_CF_CONTEST_INFO)
+            await cf.update_contest()
+            await bot.send(event, cf.info)
 
 
-    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_mon,
-                                         day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_mday,
-                                         hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_hour,
-                                         minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(cf.begin_time - 10 * 60).tm_mon,
+                                         day=time.localtime(cf.begin_time - 10 * 60).tm_mday,
+                                         hour=time.localtime(cf.begin_time - 10 * 60).tm_hour,
+                                         minute=time.localtime(cf.begin_time - 10 * 60).tm_min))
     async def cf_shang_hao():
         message_chain = MessageChain([
             await Image.from_local('pic/up_cf.jpg')
@@ -259,18 +254,18 @@ if __name__ == '__main__':
 
 
     @scheduler.scheduled_job(
-        CronTrigger(month=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mon,
-                    day=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_mday,
-                    hour=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_hour,
-                    minute=time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME).tm_min))
+        CronTrigger(month=time.localtime(cf.begin_time + cf.during_time).tm_mon,
+                    day=time.localtime(cf.begin_time + cf.during_time).tm_mday,
+                    hour=time.localtime(cf.begin_time + cf.during_time).tm_hour,
+                    minute=time.localtime(cf.begin_time + cf.during_time).tm_min))
     async def cf_xia_hao():
         message_chain = MessageChain([
             await Image.from_local('pic/down_cf.jpg')
         ])
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
-        global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME  # 比完接着更新
-        LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
+        global cf  # 比完接着更新
+        await cf.updated_time()
 
 
     # ATC
@@ -278,26 +273,25 @@ if __name__ == '__main__':
     async def query_atc_contest(event: MessageEvent):  # 查询最近比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        m = re.match(r'atc', msg.strip())
+        # m = re.match(r'atc', msg.strip())
 
-        if m is None:
-            m = re.match(r'ATC', msg.strip())
+        # if m is None:
+        #     m = re.match(r'ATC', msg.strip())
 
-        if m:
-            global LAST_ATC_CONTEST_INFO, LAST_ATC_TIME
+        if msg.strip() == 'atc' or msg.strip() == 'ATC':
+            global atc
 
             print("查询atc比赛")
 
-            if int(time.time()) - LAST_ATC_TIME < 5:
-                await bot.send(event, LAST_ATC_CONTEST_INFO[0])
+            if int(time.time()) - atc.updated_time < 5:
+                await bot.send(event, atc.info)
                 return
 
-            LAST_ATC_TIME = int(time.time())
             # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
 
-            LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
-            await bot.send(event, LAST_ATC_CONTEST_INFO[0])
+            await atc.update_contest()
+            await bot.send(event, atc.info)
 
 
     @bot.on(MessageEvent)
@@ -316,14 +310,13 @@ if __name__ == '__main__':
             name = m.group(1)
             # print(name)
 
-            global LAST_ATC_TIME
-            if int(time.time()) - LAST_ATC_TIME < 5:  # 每次询问要大于5秒
-                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(LAST_ATC_TIME + 5 - int(time.time())))
+            global atc
+            if int(time.time()) - atc.updated_time < 5:  # 每次询问要大于5秒
+                await bot.send(event, '不要频繁查询，请{}秒后再试'.format(atc.updated_time + 5 - int(time.time())))
                 return
 
-            LAST_ATC_TIME = int(time.time())
             # await bot.send(event, '查询中……')
-            statue = await atc_api.get_usr_rank(name)
+            statue = await atc.get_ranting(name)
             if statue != -1:
                 await bot.send(event, statue)
             else:
@@ -338,7 +331,7 @@ if __name__ == '__main__':
         m = re.match(r'^查询牛客分数\s*([\u4e00-\u9fa5\w.-]+)\s*$', msg.strip())
         if m:
             uname = m.group(1)
-            rating = await nc_api.get_nc_rating(uname)
+            rating = await nc.get_ranting(uname)
             await bot.send(event, rating)
 
 
@@ -349,26 +342,24 @@ if __name__ == '__main__':
         # m = re.match(r'牛客', msg.strip())
 
         if msg == "牛客":
-            global LAST_NC_TIME
-            global LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME
+            global nc
 
             print("查询牛客比赛")
 
-            if int(time.time()) - LAST_NC_TIME < 5:
-                await bot.send(event, LAST_NC_CONTEST_INFO)
+            if int(time.time()) - nc.updated_time < 5:
+                await bot.send(event, nc.info)
                 return
 
-            LAST_NC_TIME = int(time.time())
             # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
-            LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
-            await bot.send(event, LAST_NC_CONTEST_INFO if LAST_NC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
+            await nc.update_contest()
+            await bot.send(event, nc.info if nc.info != -1 else "获取比赛时出错，请联系管理员")
 
 
-    @scheduler.scheduled_job(CronTrigger(month=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_mon,
-                                         day=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_mday,
-                                         hour=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_hour,
-                                         minute=time.localtime(LAST_NC_CONTEST_BEGIN_TIME - 10 * 60).tm_min))
+    @scheduler.scheduled_job(CronTrigger(month=time.localtime(nc.begin_time - 10 * 60).tm_mon,
+                                         day=time.localtime(nc.begin_time - 10 * 60).tm_mday,
+                                         hour=time.localtime(nc.begin_time - 10 * 60).tm_hour,
+                                         minute=time.localtime(nc.begin_time - 10 * 60).tm_min))
     async def nc_shang_hao():
         message_chain = MessageChain([
             await Image.from_local('pic/up_nc.png')
@@ -386,17 +377,17 @@ if __name__ == '__main__':
         if msg == "lc":
             print("查询力扣比赛")
 
-            global LAST_LC_TIME, LAST_LC_CONTEST_INFO
+            global lc
 
-            if int(time.time()) - LAST_LC_TIME < 5:
-                await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
+            if int(time.time()) - lc.updated_time < 5:
+                await bot.send(event, lc.info if lc.info != -1 else "获取比赛时出错，请联系管理员")
                 return
 
-            LAST_LC_TIME = int(time.time())
+ 
             # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
-
-            await bot.send(event, LAST_LC_CONTEST_INFO[0][0] if LAST_LC_CONTEST_INFO != -1 else "获取比赛时出错，请联系管理员")
+            await lc.update_contest()
+            await bot.send(event, lc.info if lc.info != -1 else "获取比赛时出错，请联系管理员")
 
 
     # other
@@ -485,21 +476,29 @@ if __name__ == '__main__':
     # daily
     @scheduler.scheduled_job(CronTrigger(hour=7, minute=30))
     async def update_contest_info():
+        async def update(oj):
+            while True:
+                await oj.update_contest()
+                if oj.info != -1:
+                    break
+
+
         now = time.localtime()
         print()
         print(time.strftime("%Y-%m-%d", now))  # 给log换行
 
-        global LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
-        LAST_CF_CONTEST_INFO, LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME = await cf_api.get_contest()
+        global cf
+        await update(cf)
 
-        global LAST_ATC_CONTEST_INFO
-        LAST_ATC_CONTEST_INFO = await atc_api.get_contest_lately()
+        global atc
+        await update(atc)
 
-        global LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME
-        LAST_NC_CONTEST_INFO, LAST_NC_CONTEST_BEGIN_TIME = await nc_api.get_contest()
+        global nc
+        await update(nc)
 
-        global LAST_LC_CONTEST_INFO
-        LAST_LC_CONTEST_INFO = await lc_api.get_contest()
+        global lc
+        await update(nc)
+
 
 
     @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
@@ -537,12 +536,12 @@ if __name__ == '__main__':
 
     @hdc.on(filter_)
     async def handler(event: FriendMessage, payload: str):
-        global LAST_CF_CONTEST_BEGIN_TIME, LAST_CF_CONTEST_DURING_TIME
-        # LAST_CF_CONTEST_BEGIN_TIME = int(time.time())
-        # LAST_CF_CONTEST_DURING_TIME = 60
-        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LAST_CF_CONTEST_BEGIN_TIME)))
+        global cf
+        # cf.begin_time = int(time.time())
+        # cf.during_time = 60
+        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(cf.begin_time)))
         print(time.strftime("%Y-%m-%d %H:%M:%S",
-                            time.localtime(LAST_CF_CONTEST_BEGIN_TIME + LAST_CF_CONTEST_DURING_TIME)))
+                            time.localtime(cf.begin_time + cf.during_time)))
         await bot.send(event, f'命令 {payload} 执行成功。')
 
 
