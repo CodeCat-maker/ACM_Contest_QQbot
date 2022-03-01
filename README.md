@@ -30,7 +30,8 @@
 * ...
 
 目前已知bug：
-* atc与lc的比赛获取会有概率获取失败，目前原因不明
+* atc与lc的比赛获取会有概率获取失败，~~目前原因不明~~
+  * 已解决，更新Mirai即可
 
 ### 接口调用
 本项目基于Python3.8.10为主要开发版本，以[YiriMirai](https://github.com/YiriMiraiProject/YiriMirai)为主要依赖库
