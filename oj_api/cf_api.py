@@ -14,7 +14,7 @@ class CF(Contest):
         super().__init__()
 
 
-    async def get_ranting(self, name):
+    async def get_rating(self, name):
         def pd_color(ratting):
             if ratting < 1200:
                 return "灰名隐藏大佬"
@@ -86,7 +86,7 @@ class CF(Contest):
                 # print("最近没有比赛~")
                 return "最近没有比赛~", 0, 0
             else:
-                contest_list_lately.sort(key=lambda x: x['relativeTimeSeconds'], reverse=True)
+                contest_list_lately.sort(key=lambda x: (x['relativeTimeSeconds'], x['name']), reverse=True)
 
                 contest = contest_list_lately[0]
                 res = "下一场Codeforces比赛为：\n"

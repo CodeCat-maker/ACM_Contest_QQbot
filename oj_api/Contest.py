@@ -3,20 +3,18 @@ import asyncio
 import time
 
 
-class Contest(object):
-    __metaclass__ = abc.ABCMeta
-    info = ""
-    during_time = 0
-    begin_time = 0
-    updated_time = 0
+class Contest(metaclass=abc.ABCMeta):
 
     def __init__(self):
         self.updated_time = time.time()
+        self.info, self.begin_time, self.during_time = "", 0, 0
         self.info, self.begin_time, self.during_time = asyncio.run(self.get_contest())
 
-    async def update_contest(self):
-        self.updated_time = time.time()
-        self.info, self.begin_time, self.during_time = await self.get_contest()
+    async def update_contest(self, flag=0):  # flag=1代表强制更新
+        if int(time.time()) - self.updated_time >= 2 * 3600 or int(time.time()) >= self.begin_time + self.during_time or flag == 1:
+            self.updated_time = int(time.time())
+            self.info, self.begin_time, self.during_time = await self.get_contest()
+            print("更新{}比赛成功".format(self.__class__.__name__))
         # return self.info
 
     def show_all(self):
@@ -27,5 +25,5 @@ class Contest(object):
         pass
 
     @abc.abstractmethod
-    async def get_ranting(self, name):
+    async def get_rating(self, name):
         pass

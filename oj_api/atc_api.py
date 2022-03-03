@@ -64,9 +64,9 @@ class ATC(Contest):
                 datetime.datetime.strptime(contest_time[0:19], '%Y-%m-%d %H:%M:%S').timestamp()) - 3600, int(
                 during_time_hour) * 3600 + int(during_time_min) * 60
         except:
-            return -1
+            return -1, 0, 0
 
-    async def get_ranting(self, name):  # 返回一个列表，如果不存在用户则是空列表
+    async def get_rating(self, name):  # 返回一个列表，如果不存在用户则是空列表
         url = "https://atcoder.jp/users/" + name
 
         # 获取网页

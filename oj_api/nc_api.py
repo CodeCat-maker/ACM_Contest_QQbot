@@ -66,7 +66,7 @@ class NC(Contest):
         return res, int(lately_contest['startTime'] // 1000), durationSeconds
 
 
-    async def get_ranting(self, name):
+    async def get_rating(self, name):
         url = "https://ac.nowcoder.com/acm/contest/rating-index?searchUserName=" + name
         zm = await get_html(url)
         xx = etree.fromstring(zm, parser=etree.HTMLParser())

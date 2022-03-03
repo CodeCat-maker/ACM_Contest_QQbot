@@ -83,10 +83,10 @@ class LC(Contest):
             res.sort(key=lambda x: x[1], reverse=False)
             return res[0][0], res[0][1], res[0][2]
         except:
-            return -1
+            return -1, 0, 0
 
     # TODO 获取力扣分数
-    async def get_ranting(self, name):
+    async def get_rating(self, name):
         pass
 
 

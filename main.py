@@ -9,7 +9,7 @@ import datetime
 from log import Log
 from other_operation import random_qcjj
 from oj_api import cf_api, atc_api, lc_api, nc_api, Contest
-from mirai.models import NewFriendRequestEvent
+from mirai.models import NewFriendRequestEvent, BotInvitedJoinGroupRequestEvent
 from mirai import Startup, Shutdown, MessageEvent
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -98,6 +98,13 @@ async def query_today_contest():
     return res
 
 
+async def query_next_contest():
+    global cf, atc, nc, lc
+    next_contest = [[cf.info, cf.begin_time], [atc.info, atc.begin_time], [nc.info, nc.begin_time],
+                    [lc.info, lc.begin_time]]
+    next_contest.sort(key=lambda x: x[1])
+    return next_contest
+
 if __name__ == '__main__':
     bot = Mirai(
         qq=3409201437,  # 改成你的机器人的 QQ 号
@@ -119,7 +126,12 @@ if __name__ == '__main__':
 
 
     @bot.on(NewFriendRequestEvent)
-    async def allow_request(event: NewFriendRequestEvent):  # 有新用户好友申请就自动通过
+    async def allow_request_friend(event: NewFriendRequestEvent):  # 有新用户好友申请就自动通过
+        await bot.allow(event)
+
+
+    @bot.on(BotInvitedJoinGroupRequestEvent)
+    async def allow_request_invite_group(event: BotInvitedJoinGroupRequestEvent):  # 被邀请进群自动通过
         await bot.allow(event)
 
 
@@ -132,60 +144,25 @@ if __name__ == '__main__':
     @bot.on(MessageEvent)
     async def show_list(event: MessageEvent):  # 功能列表展示
         msg = "".join(map(str, event.message_chain[Plain]))
+
+        menu = "\n查询天气 城市 -> 查询市级城市实时天气"\
+                "\n查询cf分数 id -> 查询对应id的 cf 分数"\
+                "\ncf -> 近场 cf 比赛"\
+                "\natc -> 最新的AtCoder比赛"\
+                "\n牛客 -> 最新的牛客比赛"\
+                "\nlc -> 最新的力扣比赛"\
+                "\ntoday -> 查询今天比赛" \
+                "\nnext -> 查询下一场比赛"\
+                "\n来只清楚 -> 随机qcjj"\
+                "\nsetu/涩图 -> 涩图"\
+                "\nbug联系 -> 1095490883" \
+                "\n项目地址 -> 获取项目地址"
+
         if msg == ".help":
             if isinstance(event, GroupMessage):
-                await bot.send(event, [At(event.sender.id), "\n查询天气 城市 -> 查询市级城市实时天气"
-                                                            "\n查询cf分数 id -> 查询对应id的 cf 分数"
-                                                            "\ncf -> 近场 cf 比赛"
-                                                            "\natc -> 最新的AtCoder比赛"
-                                                            "\n牛客 -> 最新的牛客比赛"
-                                                            "\nlc -> 最新的力扣比赛"
-                                                            "\ntoday -> 查询今天比赛"
-                                                            "\n来只清楚 -> 随机qcjj"
-                                                            "\nsetu/涩图 -> 涩图"
-                                                            "\nbug联系 -> 1095490883"])
+                await bot.send(event, [At(event.sender.id), menu])
             else:
-                await bot.send(event, ["查询天气 城市 -> 查询市级城市实时天气"
-                                       "\n查询cf分数 id -> 查询对应id的 cf 分数"
-                                       "\ncf -> 近场 cf 比赛"
-                                       "\natc -> 最新的AtCoder比赛"
-                                       "\n牛客 -> 最新的牛客比赛"
-                                       "\nlc -> 最新的力扣比赛"
-                                       "\ntoday -> 查询今天比赛"
-                                       "\n来只清楚 -> 随机qcjj"
-                                       "\nsetu/涩图 -> 涩图"
-                                       "\nbug联系 -> 1095490883"])
-
-
-    @bot.on(MessageEvent)
-    async def echo(event: MessageEvent):  # 复读机
-        msg = "".join(map(str, event.message_chain[Plain])).strip()
-        m = re.match(r'^echo\s*(\w+)\s*$', msg)
-        if m and At(bot.qq) in event.message_chain:
-            await bot.send(event, msg)
-
-
-    @bot.on(MessageEvent)
-    async def on_group_message(event: MessageEvent):  # 返回
-        if At(bot.qq) in event.message_chain and len("".join(map(str, event.message_chain[Plain]))) == 0:
-            await bot.send(event, [At(event.sender.id), '你在叫我吗？'])
-
-
-    @bot.on(MessageEvent)
-    async def weather_query(event: MessageEvent):  # 天气查询
-        # 从消息链中取出文本
-        msg = "".join(map(str, event.message_chain[Plain]))
-        # 匹配指令
-        m = re.match(r'^查询天气\s*(\w+)\s*$', msg.strip())
-        if m:
-            print("cha xun")
-            # 取出指令中的地名
-            city = m.group(1)
-            print(city)
-            # await bot.send(event, '查询中……')
-            # 发送天气消息
-            await bot.send(event, await query_now_weather(city))
-
+                await bot.send(event, [menu])
 
     # CF
 
@@ -211,7 +188,7 @@ if __name__ == '__main__':
                 return
 
             # await bot.send(event, '查询中……')
-            statue = await cf.get_ranting(name)
+            statue = await cf.get_rating(name)
             if statue != -1:
                 await bot.send(event, statue)
             else:
@@ -265,7 +242,7 @@ if __name__ == '__main__':
         await bot.send_group_message(763537993, message_chain)  # 874149706测试号
 
         global cf  # 比完接着更新
-        await cf.updated_time()
+        await cf.update_contest()
 
 
     # ATC
@@ -316,7 +293,7 @@ if __name__ == '__main__':
                 return
 
             # await bot.send(event, '查询中……')
-            statue = await atc.get_ranting(name)
+            statue = await atc.get_rating(name)
             if statue != -1:
                 await bot.send(event, statue)
             else:
@@ -331,7 +308,7 @@ if __name__ == '__main__':
         m = re.match(r'^查询牛客分数\s*([\u4e00-\u9fa5\w.-]+)\s*$', msg.strip())
         if m:
             uname = m.group(1)
-            rating = await nc.get_ranting(uname)
+            rating = await nc.get_rating(uname)
             await bot.send(event, rating)
 
 
@@ -341,7 +318,7 @@ if __name__ == '__main__':
 
         # m = re.match(r'牛客', msg.strip())
 
-        if msg == "牛客":
+        if msg == "牛客" or msg == 'nc':
             global nc
 
             print("查询牛客比赛")
@@ -383,7 +360,6 @@ if __name__ == '__main__':
                 await bot.send(event, lc.info if lc.info != -1 else "获取比赛时出错，请联系管理员")
                 return
 
- 
             # await bot.send(event, '查询中……')
             # await asyncio.sleep(1)
             await lc.update_contest()
@@ -419,6 +395,43 @@ if __name__ == '__main__':
                 await Image.from_local(img_local)
             ])
             await bot.send(event, message_chain)
+
+
+    @bot.on(MessageEvent)
+    async def echo(event: MessageEvent):  # 复读机
+        msg = "".join(map(str, event.message_chain[Plain])).strip()
+        m = re.match(r'^echo\s*(\w+)\s*$', msg)
+        if m and At(bot.qq) in event.message_chain:
+            await bot.send(event, msg)
+
+
+    @bot.on(MessageEvent)
+    async def on_group_message(event: MessageEvent):  # 返回
+        if At(bot.qq) in event.message_chain and len("".join(map(str, event.message_chain[Plain]))) == 0:
+            await bot.send(event, [At(event.sender.id), '你在叫我吗？'])
+
+
+    @bot.on(MessageEvent)
+    async def weather_query(event: MessageEvent):  # 天气查询
+        # 从消息链中取出文本
+        msg = "".join(map(str, event.message_chain[Plain]))
+        # 匹配指令
+        m = re.match(r'^查询天气\s*(\w+)\s*$', msg.strip())
+        if m:
+            print("cha xun")
+            # 取出指令中的地名
+            city = m.group(1)
+            print(city)
+            # await bot.send(event, '查询中……')
+            # 发送天气消息
+            await bot.send(event, await query_now_weather(city))
+
+    @bot.on(MessageEvent)
+    async def project_address(event: MessageEvent):
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        if msg == '项目地址':
+            await bot.send(event, "大佬可以点个star✨吗qwq\nhttps://github.com/INGg/ACM_Contest_QQbot")
 
 
     # setu
@@ -474,14 +487,14 @@ if __name__ == '__main__':
 
 
     # daily
-    @scheduler.scheduled_job(CronTrigger(hour=7, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=6, minute=30))
     async def update_contest_info():
         async def update(oj):
             while True:
-                await oj.update_contest()
+                await oj.update_contest(flag=1)
                 if oj.info != -1:
+                    await asyncio.sleep(5)  # 休息5s
                     break
-
 
         now = time.localtime()
         print()
@@ -499,6 +512,18 @@ if __name__ == '__main__':
         global lc
         await update(nc)
 
+
+    @bot.on(MessageEvent)
+    async def next_contest(event: MessageEvent):  # 查询近期比赛
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        if msg == 'next' or msg == 'NEXT':
+            contest = await query_next_contest()
+            if contest[0][1] != 0:
+                res = '找到最近的 1 场比赛如下：\n\n' + contest[0][0]
+                await bot.send(event, res)
+            else:
+                await bot.send(event, '最近没有比赛哦~')
 
 
     @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
@@ -527,10 +552,11 @@ if __name__ == '__main__':
     # debug
     @Filter(FriendMessage)
     def filter_(event: FriendMessage):  # 定义过滤器，在过滤器中对事件进行过滤和解析
+        global cf, atc, lc, nc
         msg = str(event.message_chain)
         # 如果好友发送的消息格式正确，过滤器返回消息的剩余部分。比如，好友发送“ / command”，过滤器返回'command'。
         # 如果好友发送的消息格式不正确，过滤器隐式地返回None。
-        if msg.startswith('/'):
+        if msg.startswith('\\'):
             return msg[1:]
 
 
@@ -539,9 +565,8 @@ if __name__ == '__main__':
         global cf
         # cf.begin_time = int(time.time())
         # cf.during_time = 60
-        print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(cf.begin_time)))
-        print(time.strftime("%Y-%m-%d %H:%M:%S",
-                            time.localtime(cf.begin_time + cf.during_time)))
+        if payload == "cf":
+            await cf.update_contest(flag=1)
         await bot.send(event, f'命令 {payload} 执行成功。')
 
 
