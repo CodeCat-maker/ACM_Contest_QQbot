@@ -100,6 +100,12 @@ async def query_today_contest():
 
 async def query_next_contest():
     global cf, atc, nc, lc
+    # 看看需不需要更新
+    await cf.update_contest()
+    await atc.update_contest()
+    await nc.update_contest()
+    await lc.update_contest()
+
     next_contest = [[cf.info, cf.begin_time], [atc.info, atc.begin_time], [nc.info, nc.begin_time],
                     [lc.info, lc.begin_time]]
     next_contest.sort(key=lambda x: x[1])
@@ -204,7 +210,7 @@ if __name__ == '__main__':
         # if m is None:
         #     m = re.match(r'CF', msg.strip())
 
-        if msg.strip() == 'CF' or msg.strip() == 'cf':
+        if msg.strip().lower() == 'CF':
             global cf
 
             print("查询cf比赛")
@@ -255,7 +261,7 @@ if __name__ == '__main__':
         # if m is None:
         #     m = re.match(r'ATC', msg.strip())
 
-        if msg.strip() == 'atc' or msg.strip() == 'ATC':
+        if msg.strip().lower() == 'atc':
             global atc
 
             print("查询atc比赛")
@@ -318,7 +324,7 @@ if __name__ == '__main__':
 
         # m = re.match(r'牛客', msg.strip())
 
-        if msg == "牛客" or msg == 'nc':
+        if msg.strip() == "牛客" or msg.strip() == 'nc':
             global nc
 
             print("查询牛客比赛")
@@ -517,7 +523,7 @@ if __name__ == '__main__':
     async def next_contest(event: MessageEvent):  # 查询近期比赛
         msg = "".join(map(str, event.message_chain[Plain]))
 
-        if msg == 'next' or msg == 'NEXT':
+        if msg.strip().lower() == 'next':
             contest = await query_next_contest()
             if contest[0][1] != 0:
                 res = '找到最近的 1 场比赛如下：\n\n' + contest[0][0]
