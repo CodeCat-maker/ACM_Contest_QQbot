@@ -8,6 +8,7 @@
 目前实现的功能有：
 * 查询CF比赛
 * 查询对应id的cf分数
+* 随机CF round网址（随机近两年的vp）
 * 查询AtCoder比赛
 * 查询AtCoder对应id的rating分数
 * 查询力扣的比赛
@@ -23,7 +24,6 @@
 
 还在计划中的功能：
 * 通过CF的round号来找到对应网址
-* 随机CF round网址
 * 洛谷相关功能
   * （还没想好）
 * 通过qq添加qcjj图片
