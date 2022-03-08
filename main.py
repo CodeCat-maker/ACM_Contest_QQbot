@@ -225,10 +225,21 @@ if __name__ == '__main__':
             await bot.send(event, cf.info)
 
 
+    @bot.on(MessageEvent)
+    async def get_random_cf_contest(event: MessageEvent):
+        msg = "".join(map(str, event.message_chain[Plain]))
+
+        if msg.strip().lower() == '随机cf':
+            global cf
+            print("随机cf")
+            await bot.send(event, await cf.get_random_contest())
+
+
     @scheduler.scheduled_job(CronTrigger(month=time.localtime(cf.begin_time - 10 * 60).tm_mon,
                                          day=time.localtime(cf.begin_time - 10 * 60).tm_mday,
                                          hour=time.localtime(cf.begin_time - 10 * 60).tm_hour,
-                                         minute=time.localtime(cf.begin_time - 10 * 60).tm_min))
+                                         minute=time.localtime(cf.begin_time - 10 * 60).tm_min,
+                                         timezone='Asia/Shanghai'))
     async def cf_shang_hao():
         message_chain = MessageChain([
             await Image.from_local('pic/up_cf.jpg')
@@ -240,7 +251,8 @@ if __name__ == '__main__':
         CronTrigger(month=time.localtime(cf.begin_time + cf.during_time).tm_mon,
                     day=time.localtime(cf.begin_time + cf.during_time).tm_mday,
                     hour=time.localtime(cf.begin_time + cf.during_time).tm_hour,
-                    minute=time.localtime(cf.begin_time + cf.during_time).tm_min))
+                    minute=time.localtime(cf.begin_time + cf.during_time).tm_min,
+                    timezone='Asia/Shanghai'))
     async def cf_xia_hao():
         message_chain = MessageChain([
             await Image.from_local('pic/down_cf.jpg')
@@ -342,7 +354,8 @@ if __name__ == '__main__':
     @scheduler.scheduled_job(CronTrigger(month=time.localtime(nc.begin_time - 10 * 60).tm_mon,
                                          day=time.localtime(nc.begin_time - 10 * 60).tm_mday,
                                          hour=time.localtime(nc.begin_time - 10 * 60).tm_hour,
-                                         minute=time.localtime(nc.begin_time - 10 * 60).tm_min))
+                                         minute=time.localtime(nc.begin_time - 10 * 60).tm_min,
+                                         timezone='Asia/Shanghai'))
     async def nc_shang_hao():
         message_chain = MessageChain([
             await Image.from_local('pic/up_nc.png')
@@ -493,7 +506,7 @@ if __name__ == '__main__':
 
 
     # daily
-    @scheduler.scheduled_job(CronTrigger(hour=6, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=6, minute=30), timezone='Asia/Shanghai')
     async def update_contest_info():
         async def update(oj):
             while True:
@@ -532,7 +545,7 @@ if __name__ == '__main__':
                 await bot.send(event, '最近没有比赛哦~')
 
 
-    @scheduler.scheduled_job(CronTrigger(hour=8, minute=30))
+    @scheduler.scheduled_job(CronTrigger(hour=8, minute=30), timezone='Asia/Shanghai')
     async def notify_contest_info():
         res = await query_today_contest()
 

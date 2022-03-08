@@ -1,3 +1,5 @@
+import random
+
 import httpx
 import requests
 import re
@@ -12,7 +14,8 @@ from oj_api.Contest import *
 class CF(Contest):
     def __init__(self):
         super().__init__()
-
+        self.contest_finshed_list = []
+        asyncio.run(self.get_contest_finshed())
 
     async def get_rating(self, name):
         def pd_color(ratting):
@@ -77,7 +80,7 @@ class CF(Contest):
             contest_list_lately = []
 
             for contest in contest_list_all:
-                if contest['relativeTimeSeconds'] < 0:
+                if contest['relativeTimeSeconds'] < 0:  # 小于0表示未来的比赛
                     contest_list_lately.append(contest)
                 else:
                     break
@@ -99,6 +102,29 @@ class CF(Contest):
                 return res, int(contest['startTimeSeconds']), int(contest['durationSeconds'])
 
 
+    async def get_contest_finshed(self):  # 获取近两年的cf比赛
+        url = "https://codeforces.com/api/contest.list?gym=false"
+
+        json_data = await get_json(url)
+        if json_data == -1:
+            return -1
+        json_data = dict(json_data)
+
+        if json_data['status'] == "OK":
+            contest_list_all = list(json_data['result'])
+
+            for contest in contest_list_all:
+                if contest['relativeTimeSeconds'] > 0 and time.localtime(contest['startTimeSeconds']).tm_year >= time.localtime(time.time()).tm_year - 2:
+                    if contest['type'] == 'CF' and 'Codeforces ' in contest['name']:
+                        self.contest_finshed_list.append(contest)
+
+    async def get_random_contest(self):
+        id = random.randint(1, len(self.contest_finshed_list))
+        contest = self.contest_finshed_list[id]
+        res = "随机到的cf比赛为：\n" \
+              "名称：{}\n" \
+              "比赛地址：{}".format(contest['name'], "https://codeforces.com/contest/" + str(contest['id']))
+        return res
 
 
 if __name__ == '__main__':
@@ -111,5 +137,5 @@ if __name__ == '__main__':
     #     print(asyncio.run(get_usr_rating(name)))
 
     cf = CF()
-    pprint.pprint(asyncio.run(cf.get_contest()))
+    pprint.pprint(asyncio.run(cf.get_random_contest()))
     # get_contest()
