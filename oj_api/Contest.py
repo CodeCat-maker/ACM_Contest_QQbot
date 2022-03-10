@@ -4,11 +4,11 @@ import time
 
 
 class Contest(metaclass=abc.ABCMeta):
-
     def __init__(self):
         self.updated_time = time.time()
         self.info, self.begin_time, self.during_time = "", 0, 0  # 时间全以时间戳为单位
         self.info, self.begin_time, self.during_time = asyncio.run(self.get_contest())
+
 
     async def update_contest(self, flag=0):  # flag=1代表强制更新
         # 在要求强制更新或者超过上次跟新两个小时后或者上一场已经结束

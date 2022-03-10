@@ -1,21 +1,17 @@
-import random
-
-import httpx
-import requests
-import re
-import json
-import pprint
-import time
-import asyncio
-from web_operation.operation import *
-from oj_api.Contest import *
+from global_pk import *
 
 
 class CF(Contest):
     def __init__(self):
+        self.HOST = "https://codeforces.com/api/"
+        self.PATH = {
+            "userRating": "user.rating",
+            "contestList": "contest.list"
+        }
         super().__init__()
         self.contest_finshed_list = []
         asyncio.run(self.get_contest_finshed())
+
 
     async def get_rating(self, name):
         def pd_color(ratting):
@@ -38,17 +34,16 @@ class CF(Contest):
             else:
                 return '黑红名神犇'
 
-        url = "https://codeforces.com/api/user.rating?handle=" + name
+        url = self.HOST+self.PATH["userRating"]
+        data = {
+            "handle":name
+        }
         self.updated_time = time.time()
 
         try:
-            json_data = await get_json(url)
-            # pprint.pprint(json_data)
-            json_data = dict(json_data)
-
+            json_data = httpx.get(url,params=data).json()
             if json_data['status'] == "OK":
                 json_data = json_data['result']
-
                 if len(json_data) == 0:
                     return "该用户还未进行过比赛"
 
@@ -61,20 +56,18 @@ class CF(Contest):
                 # )
                 return s
             else:
-                pprint.pprint(json_data)
+                logger.warning(json_data)
                 return -1  # 表示请求失败
         except:
             return "程序出错，请稍后再试"
 
     async def get_contest(self):
-        url = "https://codeforces.com/api/contest.list?gym=false"
+        url = self.HOST + self.PATH["contestList"]
+        data = {
+            "gym": False
+        }
         contest_url = "https://codeforces.com/contest/"
-
-        json_data = await get_json(url)
-        if json_data == -1:
-            return -1
-        json_data = dict(json_data)
-
+        json_data = httpx.get(url,params=data).json()
         if json_data['status'] == "OK":
             contest_list_all = list(json_data['result'])
             contest_list_lately = []
@@ -103,16 +96,13 @@ class CF(Contest):
 
 
     async def get_contest_finshed(self):  # 获取近两年的cf比赛
-        url = "https://codeforces.com/api/contest.list?gym=false"
-
-        json_data = await get_json(url)
-        if json_data == -1:
-            return -1
-        json_data = dict(json_data)
-
+        url = self.HOST + self.PATH["contestList"]
+        data = {
+            "gym": False
+        }
+        json_data = httpx.get(url, params=data).json()
         if json_data['status'] == "OK":
             contest_list_all = list(json_data['result'])
-
             for contest in contest_list_all:
                 if contest['relativeTimeSeconds'] > 0 and time.localtime(contest['startTimeSeconds']).tm_year >= time.localtime(time.time()).tm_year - 2:
                     if contest['type'] == 'CF' and 'Codeforces ' in contest['name']:
@@ -137,5 +127,6 @@ if __name__ == '__main__':
     #     print(asyncio.run(get_usr_rating(name)))
 
     cf = CF()
-    pprint.pprint(asyncio.run(cf.get_random_contest()))
+    logger.info(asyncio.run(cf.get_random_contest()))
+    logger.info(asyncio.run(cf.get_rating(name)))
     # get_contest()
