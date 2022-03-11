@@ -1,23 +1,11 @@
-from web_operation.operation import *
-
-import time
-import datetime
-import asyncio
-import pprint
-from lxml import etree
-import requests
-from dateutil.relativedelta import relativedelta
-from oj_api.Contest import *
-
+from global_pk import *
 
 class NC(Contest):
     def __init__(self):
         super().__init__()
-
     async def get_contest(self):
         async def find():
             now = datetime.datetime.now()
-
             try:
                 now = now + relativedelta(months=-1)
                 for _ in range(12):
@@ -25,11 +13,8 @@ class NC(Contest):
                     date = str(now.year) + '-' + str(now.month)
                     url = "https://ac.nowcoder.com/acm/calendar/contest?token=&month=" + date + "&_=" + str(
                         int(time.time()) * 1000)
-
-                    json_data = await get_json(url)
-
+                    json_data = httpx.get(url).json()
                     contest_data = json_data['data']
-
                     for contest in contest_data:
                         if contest['ojName'] == 'NowCoder' \
                                 and contest['startTime'] >= int(time.time()) * 1000 \
@@ -42,6 +27,7 @@ class NC(Contest):
                     else:
                         return -2, 0
             except:
+                logger.warning("发生错误")
                 return -1
 
         lately_contest, durationSeconds = await find()
@@ -65,10 +51,9 @@ class NC(Contest):
 
         return res, int(lately_contest['startTime'] // 1000), durationSeconds
 
-
     async def get_rating(self, name):
         url = "https://ac.nowcoder.com/acm/contest/rating-index?searchUserName=" + name
-        zm = await get_html(url)
+        zm = httpx.get(url).text
         xx = etree.fromstring(zm, parser=etree.HTMLParser())
         rating = xx.xpath('/html/body/div/div[2]/div/div/div[2]/table/tbody/tr/td[5]/span/text()')
         return "“{}”当前牛客rating为：{}".format(name, rating[0])
@@ -77,7 +62,6 @@ class NC(Contest):
 
 if __name__ == '__main__':
     nc = NC()
-    print(nc.info)
+    logger.info(nc.info)
     # pprint.pprint(asyncio.run(get_contest()))
     # print(asyncio.run(get_nc_rating("ING__")))
-    pass
