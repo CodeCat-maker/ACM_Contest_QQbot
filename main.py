@@ -211,7 +211,7 @@ if __name__ == '__main__':
         # if m is None:
         #     m = re.match(r'CF', msg.strip())
 
-        if msg.strip().lower() == 'CF':
+        if msg.strip().lower() == 'cf':
             global cf
 
             print("查询cf比赛")
