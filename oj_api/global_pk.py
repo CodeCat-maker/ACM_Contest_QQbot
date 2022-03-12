@@ -2,7 +2,7 @@ import random
 import pprint
 import time
 import asyncio
-import Contest
+import oj_api.Contest
 import abc
 import asyncio
 import time
@@ -12,5 +12,5 @@ from dateutil.relativedelta import relativedelta
 import httpx
 import re
 from loguru import logger
-from Contest import *
+from oj_api.Contest import *
 from web_operation.operation import *
