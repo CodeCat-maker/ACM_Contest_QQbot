@@ -1,4 +1,4 @@
-from global_pk import *
+from oj_api.global_pk import *
 
 class NC(Contest):
     def __init__(self):

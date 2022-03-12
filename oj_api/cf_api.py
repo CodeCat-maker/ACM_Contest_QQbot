@@ -1,4 +1,4 @@
-from global_pk import *
+from oj_api.global_pk import *
 
 
 class CF(Contest):

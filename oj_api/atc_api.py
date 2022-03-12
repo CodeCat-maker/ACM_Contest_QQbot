@@ -1,15 +1,4 @@
-import datetime
-import requests
-import re
-import json
-import pprint
-import os
-import time
-from lxml import etree
-import asyncio
-import httpx
-from web_operation.operation import *
-from oj_api.Contest import *
+from oj_api.global_pk import *
 
 
 class ATC(Contest):
@@ -96,6 +85,7 @@ class ATC(Contest):
 
 if __name__ == '__main__':
     # asyncio.run(get_contest_lately())
-    print(asyncio.run(get_contest_lately()))
+    atc = ATC()
+    print((atc.info))
     # print(asyncio.run(get_usr_rank("432423")))
     pass
